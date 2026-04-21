@@ -1,33 +1,310 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ── Design Tokens — Dark Mode (default) ──────────────────────────────────── */
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --violet: #7C5CFF;
+  --violet-end: #9D6CFF;
+  --violet-gradient: linear-gradient(135deg, #7C5CFF, #9D6CFF);
+  --blue-accent: #5A67FF;
+  --teal-accent: #22D3A8;
+
+  --bg-primary: #0B0D13;
+  --surface-1: #11151C;
+  --surface-2: #161B22;
+  --surface-3: #1D2330;
+  --border: #2A2F3A;
+
+  --text-primary: #E5E7EB;
+  --text-secondary: #9CA3AF;
+
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --info: #22D3A8;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+/* ── Light Mode Overrides ─────────────────────────────────────────────────── */
+html.light {
+  --bg-primary: #F4F5F9;
+  --surface-1: #FFFFFF;
+  --surface-2: #FFFFFF;
+  --surface-3: #F3F4F6;
+  --border: #E2E5ED;
+  --text-primary: #0F172A;
+  --text-secondary: #64748B;
 }
+
+/* ── Base Styles ──────────────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--surface-1); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--violet); }
+
+/* ── Custom Utilities ─────────────────────────────────────────────────────── */
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  .font-mono-num {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── Gradient Text (Logo & Headlines) ─────── */
+  .gradient-text {
+    background: var(--violet-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Enhanced logo gradient matching mockup exactly */
+  .logo-gradient {
+    background: linear-gradient(135deg, #7C5CFF 0%, #B07FFF 50%, #9D6CFF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  /* ── Cards ────────────────────────────────── */
+  .card {
+    background-color: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+  }
+
+  .card-elevated {
+    background-color: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+  }
+
+  /* ── Buttons ──────────────────────────────── */
+  .btn-primary {
+    background: var(--violet-gradient);
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-weight: 500;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .btn-primary:hover {
+    box-shadow: 0 0 0 1px rgba(124,92,255,0.4), 0 8px 24px rgba(124,92,255,0.35);
+    transform: translateY(-1px);
+  }
+
+  /* ── Tabs ─────────────────────────────────── */
+  .tab-active {
+    border-bottom: 2px solid var(--violet);
+    color: var(--violet);
+  }
+
+  /* ── Badges ───────────────────────────────── */
+  .badge-success {
+    background: rgba(34,197,94,0.12);
+    color: var(--success);
+    border: 1px solid rgba(34,197,94,0.3);
+    border-radius: 9999px;
+    padding: 2px 10px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .badge-info {
+    background: rgba(34,211,168,0.12);
+    color: var(--info);
+    border: 1px solid rgba(34,211,168,0.3);
+    border-radius: 9999px;
+    padding: 2px 10px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .badge-warning {
+    background: rgba(245,158,11,0.12);
+    color: var(--warning);
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 9999px;
+    padding: 2px 10px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .badge-danger {
+    background: rgba(239,68,68,0.12);
+    color: var(--danger);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 9999px;
+    padding: 2px 10px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* ── Signal Pills ─────────────────────────── */
+  .signal-pill-bullish {
+    background: rgba(34,197,94,0.1);
+    color: var(--success);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .signal-pill-bearish {
+    background: rgba(239,68,68,0.1);
+    color: var(--danger);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .signal-pill-neutral {
+    background: rgba(245,158,11,0.1);
+    color: var(--warning);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* ── Chip ─────────────────────────────────── */
+  .chip {
+    background-color: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    padding: 5px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .chip:hover {
+    border-color: var(--violet);
+    color: var(--violet);
+    background-color: rgba(124,92,255,0.08);
+  }
+
+  /* ── Sidebar ──────────────────────────────── */
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .sidebar-item:hover {
+    background-color: var(--surface-3);
+    color: var(--text-primary);
+  }
+  .sidebar-item.active {
+    background-color: rgba(124,92,255,0.12);
+    color: var(--violet);
+  }
+
+  /* ── Color Helpers ────────────────────────── */
+  .text-success  { color: var(--success); }
+  .text-warning  { color: var(--warning); }
+  .text-danger   { color: var(--danger); }
+  .text-info     { color: var(--info); }
+  .text-violet   { color: var(--violet); }
+  .text-text-primary   { color: var(--text-primary); }
+  .text-text-secondary { color: var(--text-secondary); }
+
+  .bg-surface-1   { background-color: var(--surface-1); }
+  .bg-surface-2   { background-color: var(--surface-2); }
+  .bg-surface-3   { background-color: var(--surface-3); }
+  .bg-bg-primary  { background-color: var(--bg-primary); }
+  .border-border  { border-color: var(--border); }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+  /* ── Hero background glow ─────────────────── */
+  .hero-glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .hero-glow::before {
+    content: '';
+    position: absolute;
+    top: -120px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 700px;
+    height: 500px;
+    background: radial-gradient(ellipse at center, rgba(124,92,255,0.18) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  /* ── Search glow on focus ─────────────────── */
+  .search-glow:focus-within {
+    box-shadow: 0 0 0 2px rgba(124,92,255,0.35), 0 4px 24px rgba(124,92,255,0.15);
+  }
+
+  /* ── Violet search button gradient ────────── */
+  .search-btn-gradient {
+    background: var(--violet-gradient);
+  }
+
+  /* ── Persona avatar ring ──────────────────── */
+  .persona-avatar-ring {
+    box-shadow: 0 0 0 2px var(--border);
+  }
+  .persona-avatar-ring:hover {
+    box-shadow: 0 0 0 2px var(--violet);
+  }
+
+  /* ── Trending row hover ───────────────────── */
+  .trending-row:hover {
+    background-color: var(--surface-3);
   }
 }
+
+/* ── Animations ───────────────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124,92,255,0); }
+  50%       { box-shadow: 0 0 0 6px rgba(124,92,255,0.12); }
+}
+
+.animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* ── Recharts theme overrides ─────────────────────────────────────────────── */
+.recharts-text { fill: var(--text-secondary) !important; }
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line { stroke: var(--border) !important; }

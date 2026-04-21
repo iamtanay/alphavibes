@@ -1,113 +1,245 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { TrendingUp, Users, BarChart2, Clock } from "lucide-react";
+import SearchBar from "@/components/search/SearchBar";
+import { api } from "@/lib/api";
+import { TRENDING_STOCKS, POPULAR_SEARCHES } from "@/config";
+import type { MarketOverview } from "@/types";
+import { formatChange, changeColor } from "@/lib/utils";
+import Header from "@/components/layout/Header";
+import BottomTabBar from "@/components/layout/BottomTabBar";
+
+export default function HomePage() {
+  const router = useRouter();
+  const [market, setMarket] = useState<MarketOverview | null>(null);
+
+  useEffect(() => {
+    api.marketOverview().then(setMarket).catch(() => {});
+  }, []);
+
+  const trending = market?.trending ?? [
+    { ticker: "RELIANCE", name: "Reliance Industries", changePercent: 1.82 },
+    { ticker: "TCS",      name: "TCS",                 changePercent: 1.15 },
+    { ticker: "HDFCBANK", name: "HDFC Bank",            changePercent: 0.85 },
+  ];
+
+  const popular = market?.popularSearches ?? POPULAR_SEARCHES;
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
+      <Header showSearch={false} />
+
+      <main className="max-w-content mx-auto pb-24 md:pb-8">
+
+        {/* ── Hero Section ──────────────────────────────────────────────── */}
+        <section className="relative px-6 pt-14 pb-12 text-center overflow-hidden">
+
+          {/* Radial glow behind hero */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(124,92,255,0.20) 0%, transparent 70%)",
+            }}
+          />
+
+          {/* Faint chart lines */}
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            preserveAspectRatio="none"
+            viewBox="0 0 1200 420"
           >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
+            <polyline
+              points="0,320 120,270 260,295 400,195 550,235 700,148 840,168 980,108 1100,135 1200,85"
+              fill="none"
+              stroke="#7C5CFF"
+              strokeWidth="2"
+              opacity="0.10"
             />
-          </a>
+            <polyline
+              points="0,370 160,330 310,340 470,255 620,275 770,205 910,215 1060,165 1200,145"
+              fill="none"
+              stroke="#9D6CFF"
+              strokeWidth="1.5"
+              opacity="0.06"
+            />
+          </svg>
+
+          <div className="relative z-10">
+            {/* ── Headline ── */}
+            <h1 className="text-4xl md:text-[60px] font-extrabold mb-4 leading-[1.1] tracking-tight">
+              Understand{" "}
+              <span className="gradient-text">any stock</span>
+              {"\n"}
+              <br className="hidden md:block" />
+              in{" "}
+              <span className="gradient-text">60 seconds</span>
+            </h1>
+
+            <p
+              className="text-base md:text-lg mb-10"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Insider level insights. Simplified for everyone.
+            </p>
+
+            {/* ── Search ── */}
+            <div className="max-w-[540px] mx-auto mb-6">
+              <SearchBar autoFocus />
+            </div>
+
+            {/* ── Ticker chips ── */}
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <span
+                className="text-sm"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                Try these
+              </span>
+              {TRENDING_STOCKS.map((ticker) => (
+                <button
+                  key={ticker}
+                  onClick={() => router.push(`/analyse/${ticker}`)}
+                  className="chip text-xs font-medium"
+                >
+                  {ticker}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Cards Row ──────────────────────────────────────────────────── */}
+        <div className="px-6 grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl mx-auto">
+
+          {/* Trending Now */}
+          <div className="card">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-base">🔥</span>
+              <h2
+                className="text-sm font-semibold"
+                style={{ color: "var(--text-primary)" }}
+              >
+                Trending now
+              </h2>
+            </div>
+            <div className="space-y-1">
+              {trending.map((stock, i) => (
+                <button
+                  key={stock.ticker}
+                  onClick={() => router.push(`/analyse/${stock.ticker}`)}
+                  className="w-full flex items-center justify-between rounded-lg px-2 py-2 transition-colors trending-row"
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="text-xs w-4 text-right shrink-0"
+                      style={{ color: "var(--text-secondary)" }}
+                    >
+                      {i + 1}
+                    </span>
+                    <span
+                      className="text-sm"
+                      style={{ color: "var(--text-primary)" }}
+                    >
+                      {stock.name}
+                    </span>
+                  </div>
+                  <span
+                    className={`text-sm font-mono-num font-semibold ${changeColor(stock.changePercent)}`}
+                  >
+                    {formatChange(stock.changePercent)}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Popular Searches */}
+          <div className="card">
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp size={15} className="text-violet" />
+              <h2
+                className="text-sm font-semibold"
+                style={{ color: "var(--text-primary)" }}
+              >
+                Popular searches
+              </h2>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {popular.map((name) => (
+                <button
+                  key={name}
+                  onClick={() => {
+                    const ticker = name.split(" ")[0].toUpperCase();
+                    router.push(`/analyse/${ticker}`);
+                  }}
+                  className="chip text-xs"
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+        {/* ── Feature Strip ──────────────────────────────────────────────── */}
+        <section className="px-6 mt-5 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
+          {[
+            {
+              icon: Users,
+              title: "Investor Personas",
+              desc: "See how top investors would evaluate this stock",
+            },
+            {
+              icon: BarChart2,
+              title: "Smart Analysis",
+              desc: "Key insights on fundamentals, valuation & momentum",
+            },
+            {
+              icon: Clock,
+              title: "Visual & Simple",
+              desc: "Powerful data. Easy to understand.",
+            },
+          ].map((f) => {
+            const Icon = f.icon;
+            return (
+              <div key={f.title} className="card flex items-start gap-4">
+                <div
+                  className="p-2 rounded-xl shrink-0"
+                  style={{ backgroundColor: "rgba(124,92,255,0.12)" }}
+                >
+                  <Icon size={17} className="text-violet" />
+                </div>
+                <div>
+                  <h3
+                    className="text-sm font-semibold mb-0.5"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {f.title}
+                  </h3>
+                  <p
+                    className="text-xs leading-relaxed"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    {f.desc}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </section>
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
+        {/* ── Footer ─────────────────────────────────────────────────────── */}
+        <footer className="text-center mt-12 pb-4">
+          <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+            Built with ❤️ by{" "}
+            <span className="text-violet font-medium">Accrion</span>
           </p>
-        </a>
+        </footer>
+      </main>
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+      <BottomTabBar />
+    </div>
   );
 }
