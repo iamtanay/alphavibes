@@ -50,9 +50,13 @@ export default function Header({ showSearch = true }: HeaderProps) {
 
       {/* ── Desktop Nav Links ─────────────────── */}
       <nav className="hidden md:flex items-center gap-1">
-        {["About", "How it works"].map((label) => (
-          <button
+        {[
+          { label: "About", href: "/about" },
+          { label: "How it works", href: "/about#how-it-works" },
+        ].map(({ label, href }) => (
+          <Link
             key={label}
+            href={href}
             className="px-3 py-1.5 text-sm rounded-lg transition-colors"
             style={{ color: "var(--text-secondary)" }}
             onMouseEnter={(e) =>
@@ -63,7 +67,7 @@ export default function Header({ showSearch = true }: HeaderProps) {
             }
           >
             {label}
-          </button>
+          </Link>
         ))}
         <button
           className="px-3 py-1.5 text-sm rounded-lg flex items-center gap-1 transition-colors"
