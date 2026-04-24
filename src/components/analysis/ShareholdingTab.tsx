@@ -70,7 +70,13 @@ export default function ShareholdingTab({ data }: Props) {
                 </Pie>
                 <Tooltip
                   contentStyle={{ backgroundColor: "var(--surface-3)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
-                  formatter={(v: number) => `${v.toFixed(1)}%`}
+                  formatter={(
+                    value: number | string | readonly (number | string)[] | undefined
+                  ) => {
+                    if (typeof value === "number") return `${value.toFixed(1)}%`;
+                    if (Array.isArray(value)) return value.join(", ");
+                    return value ?? "";
+                  }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -151,7 +157,13 @@ export default function ShareholdingTab({ data }: Props) {
               <YAxis tick={{ fontSize: 10, fill: "var(--text-secondary)" }} domain={[0, 100]} />
               <Tooltip
                 contentStyle={{ backgroundColor: "var(--surface-3)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
-                formatter={(v: number) => `${v.toFixed(1)}%`}
+                formatter={(
+                  value: number | string | readonly (number | string)[] | undefined
+                ) => {
+                  if (typeof value === "number") return `${value.toFixed(1)}%`;
+                  if (Array.isArray(value)) return value.join(", ");
+                  return value ?? "";
+                }}
               />
               <Legend wrapperStyle={{ fontSize: 11, color: "var(--text-secondary)" }} />
               <Bar dataKey="promoter" stackId="a" fill="#7C5CFF" name="Promoter" />

@@ -9,7 +9,6 @@ import { formatChange, changeColor, formatMarketCap } from "@/lib/utils";
 import Header from "@/components/layout/Header";
 import BottomTabBar from "@/components/layout/BottomTabBar";
 
-// Persona display names — maps the ID returned by the backend to a short label
 const PERSONA_LABELS: Record<string, string> = {
   "warren-buffett":       "Buffett",
   "peter-lynch":          "Lynch",
@@ -21,7 +20,6 @@ function personaLabel(id: string): string {
   return PERSONA_LABELS[id] ?? id;
 }
 
-// Badge colour for the top persona chip
 function personaBadgeStyle(id: string): React.CSSProperties {
   const map: Record<string, { bg: string; color: string }> = {
     "warren-buffett":       { bg: "rgba(34,197,94,0.1)",   color: "var(--success)" },
@@ -45,19 +43,15 @@ type SortableKey = "marketCap" | "price" | "changePercent" | "pe" | "roe" | "rev
 
 export default function ScreenerPage() {
   const router = useRouter();
-  const [stocks,   setStocks]   = useState<ScreenerStock[]>([]);
-  const [loading,  setLoading]  = useState(true);
-  const [dataNote, setDataNote] = useState<string>("Updated daily · EOD data");
+  const [stocks,  setStocks]  = useState<ScreenerStock[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dataNote] = useState<string>("Updated daily · EOD data");
   const [sortKey,  setSortKey]  = useState<SortableKey>("marketCap");
   const [sortDir,  setSortDir]  = useState<"asc" | "desc">("desc");
 
   useEffect(() => {
     api.screener().then((d) => {
       setStocks(d.results);
-      // The backend now includes a dataNote field on any result
-      if (d.results.length > 0 && d.results[0].dataNote) {
-        setDataNote(d.results[0].dataNote);
-      }
       setLoading(false);
     });
   }, []);
@@ -73,15 +67,14 @@ export default function ScreenerPage() {
     else { setSortKey(key); setSortDir("desc"); }
   };
 
-  // Only columns with real, honest data — RSI and Supertrend removed
   const cols: { key: SortableKey; label: string; sortable: boolean }[] = [
-    { key: "marketCap",      label: "Mkt Cap",     sortable: true  },
-    { key: "price",          label: "CMP",         sortable: true  },
-    { key: "changePercent",  label: "1D %",        sortable: true  },
-    { key: "pe",             label: "P/E",         sortable: true  },
-    { key: "roe",            label: "ROE %",       sortable: true  },
-    { key: "revenueGrowth",  label: "Rev Growth",  sortable: true  },
-    { key: "debtEquity",     label: "D/E",         sortable: true  },
+    { key: "marketCap",      label: "Mkt Cap",       sortable: true },
+    { key: "price",          label: "CMP",           sortable: true },
+    { key: "changePercent",  label: "1D %",          sortable: true },
+    { key: "pe",             label: "P/E",           sortable: true },
+    { key: "roe",            label: "ROE %",         sortable: true },
+    { key: "revenueGrowth",  label: "Rev Growth",    sortable: true },
+    { key: "debtEquity",     label: "D/E",           sortable: true },
     { key: "personaScore",   label: "Persona Score", sortable: true },
   ];
 
@@ -89,16 +82,11 @@ export default function ScreenerPage() {
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
       <Header />
       <main className="max-w-content mx-auto px-4 md:px-8 py-6 pb-24 md:pb-8">
-
-        {/* ── Header ── */}
         <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
           <div>
             <h1 className="text-xl font-bold text-text-primary">Screener</h1>
-            <p className="text-sm text-text-secondary mt-1">
-              Nifty 50 · Pre-computed nightly
-            </p>
+            <p className="text-sm text-text-secondary mt-1">Nifty 50 · Pre-computed nightly</p>
           </div>
-          {/* EOD data badge */}
           <div
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs"
             style={{
@@ -113,7 +101,6 @@ export default function ScreenerPage() {
           </div>
         </div>
 
-        {/* ── Disclaimer about removed columns ── */}
         <div
           className="flex items-start gap-2.5 rounded-xl px-4 py-3 mb-5 text-xs leading-relaxed"
           style={{ backgroundColor: "rgba(124,92,255,0.05)", border: "1px solid rgba(124,92,255,0.15)", color: "var(--text-secondary)" }}
@@ -123,7 +110,6 @@ export default function ScreenerPage() {
           The Top Persona column is computed from fundamental ratios (P/E, ROE, D/E, growth) and is updated every day.
         </div>
 
-        {/* ── Table ── */}
         <div className="card overflow-x-auto">
           {loading ? (
             <div className="space-y-3">
@@ -136,7 +122,6 @@ export default function ScreenerPage() {
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--border)" }}>
                   <th className="py-3 text-left text-xs font-semibold text-text-secondary pl-0 w-8">#</th>
-                  {/* Company column */}
                   <th className="py-3 px-3 text-left text-xs font-semibold text-text-secondary">Company</th>
                   {cols.map((col) => (
                     <th
@@ -155,10 +140,7 @@ export default function ScreenerPage() {
                       </div>
                     </th>
                   ))}
-                  {/* Top Persona */}
-                  <th className="py-3 px-3 text-left text-xs font-semibold text-text-secondary">
-                    Top Persona
-                  </th>
+                  <th className="py-3 px-3 text-left text-xs font-semibold text-text-secondary">Top Persona</th>
                   <th className="py-3 px-3 text-left text-xs font-semibold text-text-secondary">Action</th>
                 </tr>
               </thead>
@@ -221,7 +203,6 @@ export default function ScreenerPage() {
             </table>
           )}
         </div>
-
       </main>
       <BottomTabBar />
     </div>

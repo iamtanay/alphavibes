@@ -153,7 +153,7 @@ export default function FundamentalsTab({ data }: Props) {
                 <YAxis tick={{ fontSize: 11, fill: "var(--text-secondary)" }} tickFormatter={formatCr} />
                 <Tooltip
                   contentStyle={{ backgroundColor: "var(--surface-3)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
-                  formatter={(v: number) => `₹${v}K Cr`}
+                  formatter={(v) => `₹${Number(v ?? 0)}K Cr`}
                 />
                 <Bar dataKey="Revenue" fill="#7C5CFF" opacity={0.7} radius={[4, 4, 0, 0]} />
                 <Bar dataKey="Profit" fill="#22D3A8" opacity={0.7} radius={[4, 4, 0, 0]} />

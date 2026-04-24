@@ -135,6 +135,16 @@ export interface Persona {
   totalMaxPoints: number;  // The persona's full scoring ceiling (always 100) — use as denominator
 }
 
+/** Represents a disagreement between two investor personas on the same stock */
+export interface PersonaConflict {
+  headline: string;
+  detail: string;
+  persona_a_id: string;
+  persona_a_name: string;
+  persona_b_id: string;
+  persona_b_name: string;
+}
+
 export interface ShareholdingData {
   promoter: number;
   fii: number;
@@ -172,6 +182,8 @@ export interface AnalysisResponse {
   shareholding: ShareholdingData;
   peers: PeerStock[];
   chartData: { daily: Candle[]; intraday: Candle[] };
+  /** Optional — only present when the API detects persona disagreements */
+  conflicts?: PersonaConflict[];
 }
 
 export interface SearchResult {
@@ -207,4 +219,4 @@ export interface ScreenerStock {
 }
 
 export type Theme = "dark" | "light";
-export type TabId = "overview" | "fundamentals" | "technicals" | "financials" | "peers" | "shareholding";
+export type TabId = "overview" | "fundamentals" | "technicals" | "financials" | "peers" | "shareholding" | "news";
