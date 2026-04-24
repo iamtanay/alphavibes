@@ -58,7 +58,13 @@ function CandlestickChart({ data, timeframe }: { data: AnalysisResponse; timefra
     const init = async () => {
       if (!containerRef.current) return;
       try {
-        const { createChart } = await import("lightweight-charts");
+        const {
+          createChart,
+          CandlestickSeries,
+          LineSeries,
+        } = await import("lightweight-charts");
+        type LineWidth = 1 | 2 | 3 | 4;
+
         const container = containerRef.current;
         const chart = createChart(container, {
           width: container.clientWidth, height: 300,
@@ -69,20 +75,49 @@ function CandlestickChart({ data, timeframe }: { data: AnalysisResponse; timefra
           timeScale: { borderColor: "#2A2F3A", timeVisible: true },
         });
         chartRef.current = chart;
+
         const allCandles = data.chartData.daily;
-        const cutoffs: Record<string, number> = { "1D": 1, "1W": 5, "1M": 22, "3M": 66, "6M": 132, "1Y": 252, "5Y": 1260 };
-        let candles = timeframe !== "All" && cutoffs[timeframe] ? allCandles.slice(-cutoffs[timeframe]) : allCandles;
-        const candleSeries = chart.addCandlestickSeries({ upColor: "#22C55E", downColor: "#EF4444", borderUpColor: "#22C55E", borderDownColor: "#EF4444", wickUpColor: "#22C55E", wickDownColor: "#EF4444" });
-        candleSeries.setData(candles.map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close })));
-        const calcMA = (arr: typeof candles, period: number) => arr.slice(period - 1).map((_, i) => ({ time: arr[i + period - 1].time, value: arr.slice(i, i + period).reduce((s, c) => s + c.close, 0) / period }));
-        if (candles.length >= 20) chart.addLineSeries({ color: "#F59E0B", lineWidth: 1.5 }).setData(calcMA(candles, 20));
-        if (candles.length >= 50) chart.addLineSeries({ color: "#7C5CFF", lineWidth: 1.5 }).setData(calcMA(candles, 50));
-        if (candles.length >= 200) chart.addLineSeries({ color: "#22D3A8", lineWidth: 1.5 }).setData(calcMA(candles, 200));
+        const cutoffs: Record<string, number> = {
+          "1D": 1, "1W": 5, "1M": 22, "3M": 66,
+          "6M": 132, "1Y": 252, "5Y": 1260,
+        };
+        const candles = timeframe !== "All" && cutoffs[timeframe]
+          ? allCandles.slice(-cutoffs[timeframe])
+          : allCandles;
+
+        const candleSeries = chart.addSeries(CandlestickSeries, {
+          upColor: "#22C55E", downColor: "#EF4444",
+          borderUpColor: "#22C55E", borderDownColor: "#EF4444",
+          wickUpColor: "#22C55E", wickDownColor: "#EF4444",
+        });
+        candleSeries.setData(
+          candles.map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close }))
+        );
+
+        const calcMA = (arr: typeof candles, period: number) =>
+          arr.slice(period - 1).map((_, i) => ({
+            time: arr[i + period - 1].time,
+            value: arr.slice(i, i + period).reduce((s, c) => s + c.close, 0) / period,
+          }));
+
+        if (candles.length >= 20)
+          chart.addSeries(LineSeries, { color: "#F59E0B", lineWidth: 2 as LineWidth }).setData(calcMA(candles, 20));
+        if (candles.length >= 50)
+          chart.addSeries(LineSeries, { color: "#7C5CFF", lineWidth: 2 as LineWidth }).setData(calcMA(candles, 50));
+        if (candles.length >= 200)
+          chart.addSeries(LineSeries, { color: "#22D3A8", lineWidth: 2 as LineWidth }).setData(calcMA(candles, 200));
+
         chart.timeScale().fitContent();
         setChartReady(true);
-        const handleResize = () => { if (container) chart.applyOptions({ width: container.clientWidth }); };
+
+        const handleResize = () => {
+          if (container) chart.applyOptions({ width: container.clientWidth });
+        };
         window.addEventListener("resize", handleResize);
-        cleanup = () => { window.removeEventListener("resize", handleResize); chart.remove(); };
+        cleanup = () => {
+          window.removeEventListener("resize", handleResize);
+          chart.remove();
+        };
       } catch (e) { console.error("Chart init error:", e); }
     };
     init();
@@ -91,7 +126,11 @@ function CandlestickChart({ data, timeframe }: { data: AnalysisResponse; timefra
 
   return (
     <div ref={containerRef} className="w-full" style={{ minHeight: 300 }}>
-      {!chartReady && <div className="flex items-center justify-center h-72"><div className="w-6 h-6 rounded-full border-2 border-violet border-t-transparent animate-spin" /></div>}
+      {!chartReady && (
+        <div className="flex items-center justify-center h-72">
+          <div className="w-6 h-6 rounded-full border-2 border-violet border-t-transparent animate-spin" />
+        </div>
+      )}
     </div>
   );
 }
@@ -177,7 +216,11 @@ export default function TechnicalsTab({ data }: Props) {
         </div>
         <CandlestickChart data={data} timeframe={timeframe} />
         <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
-          {[{ color: "#F59E0B", label: "MA 20 (Short)" }, { color: "#7C5CFF", label: "MA 50 (Medium)" }, { color: "#22D3A8", label: "MA 200 (Long)" }].map(l => (
+          {[
+            { color: "#F59E0B", label: "MA 20 (Short)" },
+            { color: "#7C5CFF", label: "MA 50 (Medium)" },
+            { color: "#22D3A8", label: "MA 200 (Long)" },
+          ].map(l => (
             <div key={l.label} className="flex items-center gap-1.5">
               <div className="w-5 h-0.5" style={{ backgroundColor: l.color }} />
               <span className="text-[11px]" style={{ color: "var(--text-secondary)" }}>{l.label}</span>
