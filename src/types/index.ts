@@ -132,6 +132,7 @@ export interface Persona {
   verdictColor: "success" | "info" | "warning" | "danger";
   summary: string;
   criteria: PersonaCriteria[];
+  totalMaxPoints: number;  // The persona's full scoring ceiling (always 100) — use as denominator
 }
 
 export interface ShareholdingData {

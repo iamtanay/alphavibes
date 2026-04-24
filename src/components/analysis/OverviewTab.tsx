@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ChevronRight, TrendingUp, TrendingDown, Minus, Info, Sparkles } from "lucide-react";
-import type { AnalysisResponse, Persona } from "@/types";
+import { ChevronRight, TrendingUp, TrendingDown, Minus, Info, Sparkles, AlertTriangle, Zap } from "lucide-react";
+import type { AnalysisResponse, Persona, PersonaConflict } from "@/types";
 import { signalColor } from "@/lib/utils";
 
 interface Props {
@@ -143,7 +143,45 @@ function QuickSummarySection({ data }: { data: AnalysisResponse }) {
   );
 }
 
+/* ── Conflict card ─────────────────────────────────────────────────────── */
+function ConflictCard({ conflict, ticker }: { conflict: PersonaConflict; ticker: string }) {
+  const router = useRouter();
+  return (
+    <div
+      className="rounded-2xl p-4"
+      style={{ backgroundColor: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.25)" }}
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <AlertTriangle size={13} style={{ color: "var(--warning)", flexShrink: 0 }} />
+        <p className="text-xs font-semibold" style={{ color: "var(--warning)" }}>
+          {conflict.headline}
+        </p>
+      </div>
+      <p className="text-xs leading-relaxed mb-3" style={{ color: "var(--text-secondary)" }}>
+        {conflict.detail}
+      </p>
+      <div className="flex gap-2 flex-wrap">
+        <button
+          onClick={() => router.push(`/analyse/${ticker}/persona/${conflict.persona_a_id}`)}
+          className="text-[11px] flex items-center gap-1 px-3 py-1 rounded-full transition-colors"
+          style={{ backgroundColor: "rgba(124,92,255,0.1)", color: "var(--violet)", border: "1px solid rgba(124,92,255,0.2)" }}
+        >
+          {conflict.persona_a_name} <ChevronRight size={10} />
+        </button>
+        <button
+          onClick={() => router.push(`/analyse/${ticker}/persona/${conflict.persona_b_id}`)}
+          className="text-[11px] flex items-center gap-1 px-3 py-1 rounded-full transition-colors"
+          style={{ backgroundColor: "rgba(124,92,255,0.1)", color: "var(--violet)", border: "1px solid rgba(124,92,255,0.2)" }}
+        >
+          {conflict.persona_b_name} <ChevronRight size={10} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function OverviewTab({ data, ticker }: Props) {
+  const conflicts = data.conflicts ?? [];
   return (
     <div className="animate-fadeIn">
       <div>
@@ -157,6 +195,23 @@ export default function OverviewTab({ data, ticker }: Props) {
         <ExplainBox>
           Scores reflect how well this stock fits each investor&apos;s strategy — not a buy/sell recommendation. Higher = stronger match. Tap any card for a full breakdown of their criteria.
         </ExplainBox>
+
+        {/* Conflict section — only shown when personas disagree */}
+        {conflicts.length > 0 && (
+          <div className="mt-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Zap size={13} style={{ color: "var(--warning)" }} />
+              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--warning)" }}>
+                {conflicts.length === 1 ? "Investor Conflict" : `${conflicts.length} Investor Conflicts`}
+              </p>
+            </div>
+            <div className="space-y-3">
+              {conflicts.map((c, i) => (
+                <ConflictCard key={i} conflict={c} ticker={ticker} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       <QuickSummarySection data={data} />
     </div>

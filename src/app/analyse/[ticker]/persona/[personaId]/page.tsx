@@ -20,75 +20,85 @@ const PERSONA_PHILOSOPHY: Record<string, {
     tagline: "The Oracle of Omaha",
     philosophy: "Buffett looks for durable competitive moats — businesses so good they can raise prices without losing customers. He wants to own a slice of a wonderful business at a fair price, not a fair business at a wonderful price. If he can't understand how a company makes money in 10 minutes, it's a pass.",
     keyPrinciples: [
-      "Consistent earnings power over 10+ years",
-      "Return on equity above 15% with minimal debt",
-      "Strong brand or cost advantage (the 'moat')",
-      "Management that thinks like owners, not employees",
+      "ROE consistently above 15% — the business compounds capital well",
+      "Debt-to-equity below 0.5 — a financial fortress, not a leveraged bet",
+      "Operating margin above 15% — real pricing power over competitors",
+      "Gross margin above 40% — product differentiation, not a commodity",
+      "EPS growing at 10%+ annually — consistent earnings power",
+      "Reasonable valuation: P/E below 25 — wonderful business at a fair price",
     ],
-    decisionLogic: "When Buffett looks at this stock, he's asking: 'Would I be comfortable holding this for 20 years if the market closed tomorrow?' Every criterion below is a proxy for that single question.",
+    decisionLogic: "When Buffett looks at this stock, he asks: 'Would I be comfortable holding this for 20 years if the market closed tomorrow?' He's not forecasting — he's checking whether the business has the DNA to compound quietly for decades. Every criterion below is a proxy for that single question.",
     quote: "It's far better to buy a wonderful company at a fair price than a fair company at a wonderful price.",
-  },
-  "benjamin-graham": {
-    tagline: "Father of Value Investing",
-    philosophy: "Graham treats every stock purchase like buying a stake in a private business — with cold, unemotional math. He demands a margin of safety: the price must be so low that even if his estimates are wrong, he still profits. He never chases growth; he hunts for neglected value.",
-    keyPrinciples: [
-      "P/E below 15 and P/B below 1.5 (the Graham Number)",
-      "Debt-to-equity under 1 — financial fortress required",
-      "10 years of continuous positive earnings",
-      "Current ratio above 2 — the company can survive a downturn",
-    ],
-    decisionLogic: "Graham applies a strict quantitative filter before he'll even read an annual report. This stock must pass his arithmetic test first. Here's how it scored on his exact checklist.",
-    quote: "The intelligent investor is a realist who sells to optimists and buys from pessimists.",
   },
   "peter-lynch": {
     tagline: "Invest in What You Know",
-    philosophy: "Lynch believes the average investor has an edge over Wall Street — they see great businesses in everyday life before analysts do. He looks for 'ten-baggers': stocks that can grow 10x. He classifies every stock into six types (stalwart, fast grower, asset play…) and only buys when the story is clear.",
+    philosophy: "Lynch believes the average investor has a genuine edge over Wall Street — they see great businesses in everyday life before analysts do. He hunts for 'ten-baggers': stocks that can grow 10x. His single most important number is the PEG ratio — growth must be cheap relative to price. If the PEG is below 1, he listens to the story.",
     keyPrinciples: [
-      "PEG ratio below 1 — growth must be cheap relative to its price",
-      "Revenue growth above 15% signals a true fast grower",
-      "Simple, understandable business model",
-      "Management investing their own money (skin in the game)",
+      "PEG ratio below 1.0 — Lynch's single favourite signal",
+      "EPS growth above 15% annually — the 'fast grower' filter",
+      "Revenue growth above 20% — growth must be top-line driven",
+      "Insider / promoter holding above 20% — skin in the game",
+      "Net margin above 10% — profitable growth, not just revenue",
+      "Low debt (D/E < 0.5) — Lynch avoids over-leveraged fast growers",
     ],
-    decisionLogic: "Lynch asks: 'Can I explain this business to a 12-year-old?' If yes, he digs into the growth story. He's checking if this stock could be a ten-bagger — and whether the growth is priced in yet.",
+    decisionLogic: "Lynch asks: 'Can I explain this business to a 12-year-old, and is the growth not yet priced in?' He classifies every stock — stalwart, fast grower, asset play, turnaround — and buys only when the category fits the numbers. He's checking whether this could be a ten-bagger that Wall Street hasn't discovered yet.",
     quote: "Know what you own, and know why you own it.",
   },
   "rakesh-jhunjhunwala": {
     tagline: "India's Warren Buffett",
-    philosophy: "Jhunjhunwala combined deep conviction with India's unique structural growth story. He'd hold great Indian franchises for decades, ignoring short-term noise. He bought when everyone was fearful, and he sought businesses that would ride India's massive demographic and consumption wave.",
+    philosophy: "Jhunjhunwala combined deep conviction with India's unique structural growth story. He'd hold great Indian franchises for decades, ignoring short-term noise. He bought when everyone was fearful, seeking businesses that would ride India's massive demographic and consumption wave. He evaluated management character as heavily as numbers — in India, the promoter IS the moat.",
     keyPrinciples: [
-      "India-centric growth thesis — domestic demand beneficiary",
-      "Management integrity is non-negotiable",
-      "High return on capital employed (ROCE > 20%)",
-      "Willing to hold through 2–3 down cycles for a 10x outcome",
+      "3Y Revenue CAGR above 20% — must be riding India's growth story",
+      "3Y EPS CAGR above 20% — earnings must match revenue growth",
+      "ROE above 20% — only high-quality compounders qualify",
+      "Promoter holding > 50% with pledge < 10% — founder conviction",
+      "Debt / Equity below 1.0 — leverage is acceptable but not extreme",
+      "Mid/small cap sweet spot (₹500–25,000 Cr) — where the 10x still lives",
     ],
-    decisionLogic: "RJ would ask: 'Is this an Indian franchise that will be 5x bigger when India's GDP doubles?' He evaluated management character as heavily as numbers — because in India, the promoter IS the moat.",
+    decisionLogic: "RJ would ask: 'Is this an Indian franchise that will be 5x bigger when India's GDP doubles?' He paid close attention to promoter quality — their vision, their integrity, their own stake. A great India thesis with a weak or pledged promoter was a dealbreaker, no matter how good the numbers looked.",
     quote: "I buy on the way down, and I buy on the way up. Be bullish on India.",
   },
-  "momentum-trader": {
-    tagline: "Ride the Wave, Don't Fight It",
-    philosophy: "The momentum trader doesn't care about intrinsic value — price action is truth. A stock moving up on rising volume has institutional buying behind it. They follow the trend until the trend breaks, using technical signals as an objective entry and exit system.",
+  "charlie-munger": {
+    tagline: "Invert, Always Invert",
+    philosophy: "Munger approaches investing by inversion — instead of asking what could go right, he first asks what could go wrong and eliminates those businesses. What remains must be truly exceptional: ROIC well above the cost of capital, pricing power so strong it shows in gross margins above 50%, and a balance sheet so clean that debt is almost an afterthought. He holds fewer stocks than Buffett and is even harder to impress.",
     keyPrinciples: [
-      "Price above 50-day and 200-day moving averages",
-      "RSI between 50–70 — strong but not overheated",
-      "Volume confirmation of every significant move",
-      "Relative strength vs Nifty 500 in the top quartile",
+      "ROIC above 15% — Munger's primary test of capital allocation quality",
+      "Gross margin above 50% — real pricing power, not a commodity business",
+      "Debt / Equity below 0.3 — stricter than Buffett; near-zero leverage",
+      "Net margin above 20% — operating leverage must be visible in numbers",
+      "ROE above 20% consistently — the business must compound, not just survive",
     ],
-    decisionLogic: "For a momentum trader, charts are the scoreboard. They're reading this stock's tape to see if big money is accumulating or distributing. Each criterion below tells part of that institutional story.",
-    quote: "The trend is your friend until the bend at the end.",
+    decisionLogic: "Munger starts by inverting: what are all the reasons this business could fail or mediocritize over 20 years? He eliminates companies that rely on leverage, lack pricing power, or operate in commoditised industries. Only after surviving that filter does he ask: is this truly extraordinary? Most companies fail immediately.",
+    quote: "Invert, always invert. It is in the nature of things that many hard problems are best solved when they are addressed backwards.",
   },
-  "growth-investor": {
-    tagline: "Pay Up for Excellence",
-    philosophy: "Growth investors believe a truly exceptional business is worth a premium. They're not buying today's earnings — they're buying future earnings, and they'll pay a high P/E today if the growth justifies it. A 50x stock is worth more than a 2x stock, even at a 'expensive' valuation.",
+  "benjamin-graham": {
+    tagline: "Father of Value Investing",
+    philosophy: "Graham treats every stock like buying a stake in a private business — with cold, unemotional arithmetic. He demands a margin of safety so large that even if his analysis is wrong, the price protects him. He never chases growth; he hunts for neglected businesses trading below their intrinsic asset value. His framework gave Buffett his foundation, but Graham himself never evolved beyond the numbers.",
     keyPrinciples: [
-      "Revenue and earnings growing 20%+ year-over-year",
-      "Expanding operating margins — scale is kicking in",
-      "Large total addressable market (TAM) — room to grow",
-      "Product with high switching costs or network effects",
+      "P/E below 15 — the primary valuation gate; anything higher is speculation",
+      "P/B below 1.5 — near net-asset-value provides the safety cushion",
+      "Current ratio above 2.0 — the company must survive a severe downturn",
+      "Dividend paying — cash returned to shareholders proves earnings are real",
+      "Debt / Equity below 0.5 — Graham is paranoid about financial leverage",
     ],
-    decisionLogic: "The growth investor is underwriting a 5-year vision. Each metric below is a checkpoint: is this business compounding fast enough to justify owning it at any price? The score reflects conviction in that trajectory.",
-    quote: "Don't be afraid to pay a little extra for a great business.",
+    decisionLogic: "Graham applies a strict quantitative filter before he will even read an annual report. He's not forecasting the future — he's demanding that the present price is so cheap that the future barely matters. This scorecard is his arithmetic test. Either the numbers pass or they don't; there is no story that overrides them.",
+    quote: "The intelligent investor is a realist who sells to optimists and buys from pessimists.",
+  },
+  "vijay-kedia": {
+    tagline: "SMILE — Find It Before the Crowd",
+    philosophy: "Kedia's SMILE framework — Small/Medium cap, In a niche, Longevity of business model, Emerging — is a hunt for undiscovered Indian franchises before institutional money arrives. He wants to own companies that are too small for mutual funds to buy, too niche for analysts to cover, and too fast-growing to stay cheap for long. His edge is discovery; once a stock gets widely covered, he moves on.",
+    keyPrinciples: [
+      "Revenue CAGR > 25% — must be a fast compounder, not a steady grower",
+      "Promoter holding > 60% with pledge < 5% — maximum founder conviction",
+      "FII holding below 15% — undiscovered by big money means upside remains",
+      "Market cap below ₹10,000 Cr — his sweet spot before the fund managers arrive",
+      "ROE above 20% — quality matters even in small caps",
+    ],
+    decisionLogic: "Kedia asks: 'Has the institutional herd found this yet?' Low FII holding, high promoter stake, and a niche that doesn't show up on Bloomberg screens are features, not bugs. He is willing to accept illiquidity and short-term volatility in exchange for being years early on India's next compounding machine.",
+    quote: "I look for businesses that are growing fast, led by honest promoters, and still undiscovered by the big money.",
   },
 };
+
 
 /* ── Score ring component ────────────────────────────────────────────────── */
 function ScoreRing({ score, color }: { score: number; color: string }) {
@@ -338,33 +348,90 @@ export default function PersonaDetailPage() {
             </p>
           </div>
           <div>
-            {persona.criteria.map((c: { label: string; value: string; pass: boolean }, i: number) => (
-              <div
-                key={i}
-                className="flex items-center justify-between px-5 py-3.5"
-                style={{ borderBottom: i < persona.criteria.length - 1 ? "1px solid var(--border)" : "none" }}
-              >
-                <span className="text-sm" style={{ color: "var(--text-primary)" }}>{c.label}</span>
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-sm font-mono-num" style={{ color: "var(--text-secondary)" }}>{c.value}</span>
-                  <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: c.pass ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)" }}
-                  >
-                    {c.pass
-                      ? <CheckCircle size={14} style={{ color: "var(--success)" }} />
-                      : <XCircle size={14} style={{ color: "var(--danger)" }} />
-                    }
+            {persona.criteria.map((c: any, i: number) => {
+              const hasW  = typeof c.maxPoints === "number" && typeof c.earnedPoints === "number";
+              const pct   = hasW ? Math.round((c.earnedPoints / c.maxPoints) * 100) : (c.pass ? 100 : 0);
+              const color = pct >= 70 ? "var(--success)" : pct >= 40 ? "var(--warning)" : "var(--danger)";
+              return (
+                <div
+                  key={i}
+                  className="px-5 py-3.5"
+                  style={{ borderBottom: i < persona.criteria.length - 1 ? "1px solid var(--border)" : "none" }}
+                >
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <span className="text-sm" style={{ color: "var(--text-primary)" }}>{c.label}</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-sm font-mono-num" style={{ color: "var(--text-secondary)" }}>{c.value}</span>
+                      {hasW ? (
+                        <span className="text-[11px] font-mono-num font-semibold" style={{ color }}>
+                          {c.earnedPoints}/{c.maxPoints}
+                        </span>
+                      ) : (
+                        <div
+                          className="w-6 h-6 rounded-full flex items-center justify-center"
+                          style={{ backgroundColor: c.pass ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)" }}
+                        >
+                          {c.pass
+                            ? <CheckCircle size={14} style={{ color: "var(--success)" }} />
+                            : <XCircle size={14} style={{ color: "var(--danger)" }} />
+                          }
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1 rounded-full" style={{ backgroundColor: "var(--border)" }}>
+                      <div className="h-1 rounded-full" style={{ width: `${pct}%`, background: color, transition: "width 0.8s ease" }} />
+                    </div>
+                    {hasW && (
+                      <span className="text-[10px] shrink-0" style={{ color: "var(--text-tertiary)" }}>of {c.maxPoints} pts</span>
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {/* Progress bar */}
+          {/* Score breakdown footer */}
           <div className="px-5 py-4" style={{ borderTop: "1px solid var(--border)", backgroundColor: "var(--surface-3)" }}>
             {(() => {
-              const passed = persona.criteria.filter((c: { pass: boolean }) => c.pass).length;
+              // totalMaxPoints comes from the backend (persona.MAX_POINTS = 100).
+              // Using it as the denominator is correct — some criteria are skipped
+              // when yfinance returns None for a metric, so summing the returned
+              // criteria maxPoints would give a wrong (lower) denominator and show
+              // an inflated percentage like "85/85 pts · 100%".
+              const totalMax   = (persona as any).totalMaxPoints ?? 100;
+              const hasWeights = persona.criteria.some(
+                (c: any) => typeof c.maxPoints === "number" && typeof c.earnedPoints === "number"
+              );
+              if (hasWeights) {
+                const earned = persona.criteria.reduce((s: number, c: any) => s + (c.earnedPoints ?? 0), 0);
+                const pct    = totalMax > 0 ? Math.round((earned / totalMax) * 100) : 0;
+                const color  = pct >= 70 ? "var(--success)" : pct >= 40 ? "var(--warning)" : "var(--danger)";
+                return (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs" style={{ color: "var(--text-secondary)" }}>Total score</span>
+                      <span className="text-xs font-mono-num font-semibold" style={{ color }}>
+                        {earned} / {totalMax} pts
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1.5 rounded-full" style={{ backgroundColor: "var(--border)" }}>
+                        <div
+                          className="h-1.5 rounded-full"
+                          style={{ width: `${pct}%`, background: color, transition: "width 1s ease" }}
+                        />
+                      </div>
+                      <span className="text-xs font-mono-num shrink-0" style={{ color: "var(--text-secondary)" }}>
+                        {pct}%
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+              // Fallback: pass/fail count
+              const passed = persona.criteria.filter((c: any) => c.pass).length;
               const total  = persona.criteria.length;
               const pct    = Math.round((passed / total) * 100);
               return (

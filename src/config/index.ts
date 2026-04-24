@@ -15,7 +15,7 @@ export const SITE_CONFIG = {
   rateLimitPerSession: 3,
 };
 
-export const TRENDING_STOCKS = ["RELIANCE", "TCS", "INFY", "HDFCBANK", "TESLA", "APPLE"];
+export const TRENDING_STOCKS = ["RELIANCE", "TCS", "INFY", "HDFCBANK", "WIPRO", "ICICIBANK"];
 
 export const POPULAR_SEARCHES = [
   "Infosys", "ICICI Bank", "Larsen & Toubro",

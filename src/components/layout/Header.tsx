@@ -69,7 +69,8 @@ export default function Header({ showSearch = true }: HeaderProps) {
             {label}
           </Link>
         ))}
-        <button
+        <Link
+          href="/screener"
           className="px-3 py-1.5 text-sm rounded-lg flex items-center gap-1 transition-colors"
           style={{ color: "var(--text-secondary)" }}
           onMouseEnter={(e) =>
@@ -79,8 +80,8 @@ export default function Header({ showSearch = true }: HeaderProps) {
             (e.currentTarget.style.color = "var(--text-secondary)")
           }
         >
-          Markets <ChevronDown size={13} />
-        </button>
+          Markets
+        </Link>
       </nav>
 
       {/* ── Center Search ─────────────────────── */}
