@@ -10,7 +10,7 @@ import { useAppStore } from "@/store";
 export default function BottomTabBar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, signOut, requireAuth, setShowLoginModal } = useAuth();
+  const { user, signOut, setShowLoginModal, setPendingAction } = useAuth();
   const { theme, toggleTheme } = useAppStore();
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -33,7 +33,13 @@ export default function BottomTabBar() {
 
   function handleWatchlist(e: React.MouseEvent) {
     e.preventDefault();
-    if (requireAuth()) router.push("/watchlist");
+    if (user) {
+      router.push("/watchlist");
+    } else {
+      // Store the destination so the modal's Google button can carry it through OAuth
+      setPendingAction(() => () => router.push("/watchlist"));
+      setShowLoginModal(true);
+    }
   }
 
   const initials = user

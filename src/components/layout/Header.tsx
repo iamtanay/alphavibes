@@ -15,12 +15,11 @@ interface HeaderProps {
 
 export default function Header({ showSearch = true }: HeaderProps) {
   const { theme, toggleTheme } = useAppStore();
-  const { user, signOut, requireAuth } = useAuth();
+  const { user, signOut, setShowLoginModal, setPendingAction } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Close dropdown on outside click
   useEffect(() => {
     function handle(e: MouseEvent) {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
@@ -33,7 +32,13 @@ export default function Header({ showSearch = true }: HeaderProps) {
 
   function handleWatchlistClick(e: React.MouseEvent) {
     e.preventDefault();
-    if (requireAuth()) router.push("/watchlist");
+    if (user) {
+      router.push("/watchlist");
+    } else {
+      // Store destination so Google OAuth can carry it through the redirect
+      setPendingAction(() => () => router.push("/watchlist"));
+      setShowLoginModal(true);
+    }
   }
 
   const initials = user
@@ -174,7 +179,6 @@ export default function Header({ showSearch = true }: HeaderProps) {
             >
               {user ? (
                 <>
-                  {/* User info */}
                   <div className="px-4 py-3 border-b" style={{ borderColor: "var(--border)" }}>
                     <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
                       {user.firstName} {user.lastName}
@@ -183,8 +187,6 @@ export default function Header({ showSearch = true }: HeaderProps) {
                       {user.email}
                     </p>
                   </div>
-
-                  {/* Theme toggle */}
                   <button
                     onClick={() => { toggleTheme(); setProfileOpen(false); }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors"
@@ -195,8 +197,6 @@ export default function Header({ showSearch = true }: HeaderProps) {
                     {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
                     {theme === "dark" ? "Light mode" : "Dark mode"}
                   </button>
-
-                  {/* Logout */}
                   <button
                     onClick={() => { signOut(); setProfileOpen(false); }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors"
@@ -210,7 +210,6 @@ export default function Header({ showSearch = true }: HeaderProps) {
                 </>
               ) : (
                 <>
-                  {/* Theme toggle (unauthenticated) */}
                   <button
                     onClick={() => { toggleTheme(); setProfileOpen(false); }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors"
@@ -223,7 +222,7 @@ export default function Header({ showSearch = true }: HeaderProps) {
                   </button>
                   <div className="border-t" style={{ borderColor: "var(--border)" }} />
                   <button
-                    onClick={() => { setProfileOpen(false); }}
+                    onClick={() => { setShowLoginModal(true); setProfileOpen(false); }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors"
                     style={{ color: "var(--violet)" }}
                     onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--surface-3)")}

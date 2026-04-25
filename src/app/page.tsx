@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TrendingUp, Users, BarChart2, Clock } from "lucide-react";
 import SearchBar from "@/components/search/SearchBar";
@@ -17,32 +17,49 @@ function LoginRedirectHandler() {
   const router = useRouter();
   const { user, loading, setShowLoginModal, setPendingAction } = useAuth();
 
+  // Keep the `next` destination in a ref so it survives the URL clean-up.
+  // searchParams is a snapshot — once we wipe the query string the value is gone,
+  // but we still need it after loading resolves.
+  const nextRef = useRef<string | null>(null);
+  const needsLoginRef = useRef(false);
+  const handledRef = useRef(false);
+
+  // Phase 1 — capture params and clean the URL immediately on mount.
   useEffect(() => {
     const needsLogin = searchParams.get("login") === "1";
     const next = searchParams.get("next");
 
     if (!needsLogin && !next) return;
 
-    // Wait until the session check is complete before doing anything.
-    // This prevents the modal from flashing for already-logged-in users
-    // and ensures the URL isn't cleaned before we've read the params.
-    if (loading) return;
+    // Snapshot the values into refs before wiping the URL
+    nextRef.current = next;
+    needsLoginRef.current = needsLogin;
 
-    // Clean the URL now that we know the session state
     const clean = new URL(window.location.href);
     clean.searchParams.delete("login");
     clean.searchParams.delete("next");
     window.history.replaceState({}, "", clean.toString());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // intentionally only on mount — we captured the initial params
 
-    if (user && next) {
-      // Session is active — navigate straight to the intended page
+  // Phase 2 — act once session state is known.
+  useEffect(() => {
+    if (loading) return;                          // still resolving
+    if (!nextRef.current) return;                 // no destination to redirect to
+    if (handledRef.current) return;               // already handled
+    handledRef.current = true;
+
+    const next = nextRef.current;
+
+    if (user) {
+      // Logged in — go straight to the intended page
       router.push(next);
-    } else if (!user && next) {
-      // Not logged in — store destination and show modal
+    } else {
+      // Not logged in — store destination and open modal
       setPendingAction(() => () => router.push(next));
       setShowLoginModal(true);
     }
-  }, [searchParams, user, loading, router, setShowLoginModal, setPendingAction]);
+  }, [loading, user, router, setShowLoginModal, setPendingAction]);
 
   return null;
 }

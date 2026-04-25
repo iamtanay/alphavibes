@@ -22,8 +22,6 @@ interface SupabaseContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
-  /** Returns true if already authenticated. If not, shows login modal and
-   *  optionally stores a callback to run after the user signs in. */
   requireAuth: (callback?: () => void) => boolean;
   showLoginModal: boolean;
   setShowLoginModal: (v: boolean) => void;
@@ -70,12 +68,9 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       if (authedUser) {
         upsertUserProfile(session!.user);
         setShowLoginModal(false);
-        // Fire pending action (e.g. navigate to the originally requested page)
+        // Fire pending action — used when user logs in via modal (not OAuth redirect)
         setPendingAction((prev) => {
-          if (prev) {
-            // Run on next tick so state is settled
-            setTimeout(() => prev(), 50);
-          }
+          if (prev) setTimeout(() => prev(), 50);
           return null;
         });
       }
@@ -101,8 +96,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signInWithGoogle() {
-    // Encode the destination into the callback URL so it survives the full
-    // Google OAuth redirect round-trip (React state is wiped on redirect).
+    // Read the `next` destination from the current URL (set by middleware redirect
+    // or by requireAuth when opening the modal from a specific page).
+    // We encode it into the OAuth callback URL so it survives the full redirect
+    // round-trip — React state is wiped when the browser navigates to Google.
     const next =
       new URLSearchParams(window.location.search).get("next") ||
       (window.location.pathname !== "/" ? window.location.pathname : "");
