@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { TrendingUp, Users, BarChart2, Clock } from "lucide-react";
 import SearchBar from "@/components/search/SearchBar";
 import { api } from "@/lib/api";
@@ -10,14 +10,40 @@ import type { MarketOverview } from "@/types";
 import { formatChange, changeColor } from "@/lib/utils";
 import Header from "@/components/layout/Header";
 import BottomTabBar from "@/components/layout/BottomTabBar";
+import { useAuth } from "@/components/providers/SupabaseProvider";
 
 export default function HomePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { requireAuth, setShowLoginModal, user, setPendingAction } = useAuth();
   const [market, setMarket] = useState<MarketOverview | null>(null);
 
   useEffect(() => {
     api.marketOverview().then(setMarket).catch(() => {});
   }, []);
+
+  // If middleware redirected here with ?login=1, open the modal automatically.
+  // Once the user signs in, redirect them to the original destination (?next=...).
+  useEffect(() => {
+    const needsLogin = searchParams.get("login") === "1";
+    const next = searchParams.get("next");
+    if (needsLogin && !user) {
+      if (next) {
+        setPendingAction(() => () => router.push(next));
+      }
+      setShowLoginModal(true);
+      // Clean the URL so refreshing doesn't re-trigger the modal
+      const clean = new URL(window.location.href);
+      clean.searchParams.delete("login");
+      clean.searchParams.delete("next");
+      window.history.replaceState({}, "", clean.toString());
+    }
+  }, [searchParams, user, setShowLoginModal, setPendingAction, router]);
+
+  // After login, execute any pending action (e.g. navigate to /analyse/RELIANCE)
+  useEffect(() => {
+    // SupabaseProvider already handles pendingAction on auth state change
+  }, [user]);
 
   const trending = market?.trending ?? [
     { ticker: "RELIANCE", name: "Reliance Industries", changePercent: 1.82 },
@@ -26,6 +52,10 @@ export default function HomePage() {
   ];
 
   const popular = market?.popularSearches ?? POPULAR_SEARCHES;
+
+  function navigateToStock(ticker: string) {
+    requireAuth(() => router.push(`/analyse/${ticker}`));
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
@@ -67,7 +97,6 @@ export default function HomePage() {
           </svg>
 
           <div className="relative z-10">
-            {/* ── Headline ── */}
             <h1 className="text-4xl md:text-[60px] font-extrabold mb-4 leading-[1.1] tracking-tight">
               Understand{" "}
               <span className="gradient-text">any stock</span>
@@ -77,30 +106,20 @@ export default function HomePage() {
               <span className="gradient-text">60 seconds</span>
             </h1>
 
-            <p
-              className="text-base md:text-lg mb-10"
-              style={{ color: "var(--text-secondary)" }}
-            >
+            <p className="text-base md:text-lg mb-10" style={{ color: "var(--text-secondary)" }}>
               Insider level insights. Simplified for everyone.
             </p>
 
-            {/* ── Search ── */}
             <div className="max-w-[540px] mx-auto mb-6">
               <SearchBar autoFocus />
             </div>
 
-            {/* ── Ticker chips ── */}
             <div className="flex flex-wrap items-center justify-center gap-2">
-              <span
-                className="text-sm"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                Try these
-              </span>
+              <span className="text-sm" style={{ color: "var(--text-secondary)" }}>Try these</span>
               {TRENDING_STOCKS.map((ticker) => (
                 <button
                   key={ticker}
-                  onClick={() => router.push(`/analyse/${ticker}`)}
+                  onClick={() => navigateToStock(ticker)}
                   className="chip text-xs font-medium"
                 >
                   {ticker}
@@ -113,14 +132,10 @@ export default function HomePage() {
         {/* ── Cards Row ──────────────────────────────────────────────────── */}
         <div className="px-6 grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl mx-auto">
 
-          {/* Trending Now */}
           <div className="card">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-base">🔥</span>
-              <h2
-                className="text-sm font-semibold"
-                style={{ color: "var(--text-primary)" }}
-              >
+              <h2 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
                 Trending now
               </h2>
             </div>
@@ -128,26 +143,16 @@ export default function HomePage() {
               {trending.map((stock, i) => (
                 <button
                   key={stock.ticker}
-                  onClick={() => router.push(`/analyse/${stock.ticker}`)}
+                  onClick={() => navigateToStock(stock.ticker)}
                   className="w-full flex items-center justify-between rounded-lg px-2 py-2 transition-colors trending-row"
                 >
                   <div className="flex items-center gap-3">
-                    <span
-                      className="text-xs w-4 text-right shrink-0"
-                      style={{ color: "var(--text-secondary)" }}
-                    >
+                    <span className="text-xs w-4 text-right shrink-0" style={{ color: "var(--text-secondary)" }}>
                       {i + 1}
                     </span>
-                    <span
-                      className="text-sm"
-                      style={{ color: "var(--text-primary)" }}
-                    >
-                      {stock.name}
-                    </span>
+                    <span className="text-sm" style={{ color: "var(--text-primary)" }}>{stock.name}</span>
                   </div>
-                  <span
-                    className={`text-sm font-mono-num font-semibold ${changeColor(stock.changePercent)}`}
-                  >
+                  <span className={`text-sm font-mono-num font-semibold ${changeColor(stock.changePercent)}`}>
                     {formatChange(stock.changePercent)}
                   </span>
                 </button>
@@ -155,14 +160,10 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Popular Searches */}
           <div className="card">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp size={15} className="text-violet" />
-              <h2
-                className="text-sm font-semibold"
-                style={{ color: "var(--text-primary)" }}
-              >
+              <h2 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
                 Popular searches
               </h2>
             </div>
@@ -172,7 +173,7 @@ export default function HomePage() {
                   key={name}
                   onClick={() => {
                     const ticker = name.split(" ")[0].toUpperCase();
-                    router.push(`/analyse/${ticker}`);
+                    navigateToStock(ticker);
                   }}
                   className="chip text-xs"
                 >
@@ -186,55 +187,28 @@ export default function HomePage() {
         {/* ── Feature Strip ──────────────────────────────────────────────── */}
         <section className="px-6 mt-5 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
           {[
-            {
-              icon: Users,
-              title: "Investor Personas",
-              desc: "See how top investors would evaluate this stock",
-            },
-            {
-              icon: BarChart2,
-              title: "Smart Analysis",
-              desc: "Key insights on fundamentals, valuation & momentum",
-            },
-            {
-              icon: Clock,
-              title: "Visual & Simple",
-              desc: "Powerful data. Easy to understand.",
-            },
+            { icon: Users,    title: "Investor Personas", desc: "See how top investors would evaluate this stock" },
+            { icon: BarChart2, title: "Smart Analysis",   desc: "Key insights on fundamentals, valuation & momentum" },
+            { icon: Clock,    title: "Visual & Simple",   desc: "Powerful data. Easy to understand." },
           ].map((f) => {
             const Icon = f.icon;
             return (
               <div key={f.title} className="card flex items-start gap-4">
-                <div
-                  className="p-2 rounded-xl shrink-0"
-                  style={{ backgroundColor: "rgba(124,92,255,0.12)" }}
-                >
+                <div className="p-2 rounded-xl shrink-0" style={{ backgroundColor: "rgba(124,92,255,0.12)" }}>
                   <Icon size={17} className="text-violet" />
                 </div>
                 <div>
-                  <h3
-                    className="text-sm font-semibold mb-0.5"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    {f.title}
-                  </h3>
-                  <p
-                    className="text-xs leading-relaxed"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
-                    {f.desc}
-                  </p>
+                  <h3 className="text-sm font-semibold mb-0.5" style={{ color: "var(--text-primary)" }}>{f.title}</h3>
+                  <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>{f.desc}</p>
                 </div>
               </div>
             );
           })}
         </section>
 
-        {/* ── Footer ─────────────────────────────────────────────────────── */}
         <footer className="text-center mt-12 pb-4">
           <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
-            Built with ❤️ by{" "}
-            <span className="text-violet font-medium">Accrion</span>
+            Built with ❤️ by <span className="text-violet font-medium">Accrion</span>
           </p>
         </footer>
       </main>

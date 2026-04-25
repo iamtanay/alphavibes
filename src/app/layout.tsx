@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { SupabaseProvider } from "@/components/providers/SupabaseProvider";
+import LoginModal from "@/components/auth/LoginModal";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -19,7 +21,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased bg-bg-primary text-text-primary min-h-screen`}>
         <ThemeProvider>
-          {children}
+          <SupabaseProvider>
+            {children}
+            <LoginModal />
+          </SupabaseProvider>
         </ThemeProvider>
       </body>
     </html>

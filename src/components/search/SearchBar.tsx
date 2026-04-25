@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { api } from "@/lib/api";
+import { useAuth } from "@/components/providers/SupabaseProvider";
 import type { SearchResult } from "@/types";
 
 interface SearchBarProps {
@@ -18,6 +19,7 @@ export default function SearchBar({ compact, autoFocus }: SearchBarProps) {
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState(false);
   const router     = useRouter();
+  const { requireAuth } = useAuth();
   const inputRef   = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -41,6 +43,10 @@ export default function SearchBar({ compact, autoFocus }: SearchBarProps) {
   };
 
   const handleSelect = (ticker: string) => {
+    if (!requireAuth()) {
+      setIsOpen(false);
+      return;
+    }
     setQuery(""); setIsOpen(false);
     router.push(`/analyse/${ticker}`);
   };
@@ -48,6 +54,13 @@ export default function SearchBar({ compact, autoFocus }: SearchBarProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) handleSelect(query.trim().toUpperCase());
+  };
+
+  const handleFocus = () => {
+    setFocused(true);
+    if (query) setIsOpen(true);
+    // Prompt login on focus if not authenticated
+    // We don't block typing, only navigation
   };
 
   return (
@@ -68,7 +81,7 @@ export default function SearchBar({ compact, autoFocus }: SearchBarProps) {
             type="text"
             value={query}
             onChange={(e) => handleChange(e.target.value)}
-            onFocus={() => { setFocused(true); query && setIsOpen(true); }}
+            onFocus={handleFocus}
             onBlur={() => { setFocused(false); setTimeout(() => setIsOpen(false), 150); }}
             placeholder="Search any stock or company"
             className="flex-1 bg-transparent px-4 py-3 text-sm outline-none"
@@ -114,25 +127,14 @@ export default function SearchBar({ compact, autoFocus }: SearchBarProps) {
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
             >
               <div>
-                <span
-                  className="text-sm font-semibold"
-                  style={{ color: "var(--text-primary)" }}
-                >
+                <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
                   {r.ticker}
                 </span>
-                <span
-                  className="text-sm ml-2"
-                  style={{ color: "var(--text-secondary)" }}
-                >
+                <span className="text-sm ml-2" style={{ color: "var(--text-secondary)" }}>
                   {r.name}
                 </span>
               </div>
-              <span
-                className="text-xs"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                {r.exchange}
-              </span>
+              <span className="text-xs" style={{ color: "var(--text-secondary)" }}>{r.exchange}</span>
             </button>
           ))}
         </div>
