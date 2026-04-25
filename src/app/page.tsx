@@ -12,26 +12,34 @@ import Header from "@/components/layout/Header";
 import BottomTabBar from "@/components/layout/BottomTabBar";
 import { useAuth } from "@/components/providers/SupabaseProvider";
 
-// Separated into its own component so Suspense can wrap useSearchParams
 function LoginRedirectHandler() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user, setShowLoginModal, setPendingAction } = useAuth();
+  const { user, loading, setShowLoginModal, setPendingAction } = useAuth();
 
   useEffect(() => {
     const needsLogin = searchParams.get("login") === "1";
     const next = searchParams.get("next");
-    if (needsLogin && !user) {
-      if (next) {
-        setPendingAction(() => () => router.push(next));
-      }
+
+    if (!needsLogin && !next) return;
+
+    // Clean the URL immediately
+    const clean = new URL(window.location.href);
+    clean.searchParams.delete("login");
+    clean.searchParams.delete("next");
+    window.history.replaceState({}, "", clean.toString());
+
+    if (loading) return; // Wait until session is confirmed
+
+    if (user && next) {
+      // Just came back from Google OAuth and session is ready — navigate now
+      router.push(next);
+    } else if (!user && next) {
+      // Not logged in — store destination and show modal
+      setPendingAction(() => () => router.push(next));
       setShowLoginModal(true);
-      const clean = new URL(window.location.href);
-      clean.searchParams.delete("login");
-      clean.searchParams.delete("next");
-      window.history.replaceState({}, "", clean.toString());
     }
-  }, [searchParams, user, setShowLoginModal, setPendingAction, router]);
+  }, [searchParams, user, loading, router, setShowLoginModal, setPendingAction]);
 
   return null;
 }
@@ -59,7 +67,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
-      {/* Suspense is required by Next.js whenever useSearchParams is used in a child */}
       <Suspense fallback={null}>
         <LoginRedirectHandler />
       </Suspense>
@@ -68,7 +75,6 @@ export default function HomePage() {
 
       <main className="max-w-content mx-auto pb-24 md:pb-8">
 
-        {/* ── Hero Section ──────────────────────────────────────────────── */}
         <section className="relative px-6 pt-14 pb-12 text-center overflow-hidden">
           <div
             className="absolute inset-0 pointer-events-none"
@@ -76,46 +82,27 @@ export default function HomePage() {
               background: "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(124,92,255,0.20) 0%, transparent 70%)",
             }}
           />
-          <svg
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            preserveAspectRatio="none"
-            viewBox="0 0 1200 420"
-          >
-            <polyline
-              points="0,320 120,270 260,295 400,195 550,235 700,148 840,168 980,108 1100,135 1200,85"
-              fill="none" stroke="#7C5CFF" strokeWidth="2" opacity="0.10"
-            />
-            <polyline
-              points="0,370 160,330 310,340 470,255 620,275 770,205 910,215 1060,165 1200,145"
-              fill="none" stroke="#9D6CFF" strokeWidth="1.5" opacity="0.06"
-            />
+          <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none" viewBox="0 0 1200 420">
+            <polyline points="0,320 120,270 260,295 400,195 550,235 700,148 840,168 980,108 1100,135 1200,85" fill="none" stroke="#7C5CFF" strokeWidth="2" opacity="0.10" />
+            <polyline points="0,370 160,330 310,340 470,255 620,275 770,205 910,215 1060,165 1200,145" fill="none" stroke="#9D6CFF" strokeWidth="1.5" opacity="0.06" />
           </svg>
 
           <div className="relative z-10">
             <h1 className="text-4xl md:text-[60px] font-extrabold mb-4 leading-[1.1] tracking-tight">
-              Understand{" "}
-              <span className="gradient-text">any stock</span>
+              Understand{" "}<span className="gradient-text">any stock</span>
               <br className="hidden md:block" />
-              in{" "}
-              <span className="gradient-text">60 seconds</span>
+              in{" "}<span className="gradient-text">60 seconds</span>
             </h1>
-
             <p className="text-base md:text-lg mb-10" style={{ color: "var(--text-secondary)" }}>
               Insider level insights. Simplified for everyone.
             </p>
-
             <div className="max-w-[540px] mx-auto mb-6">
               <SearchBar autoFocus />
             </div>
-
             <div className="flex flex-wrap items-center justify-center gap-2">
               <span className="text-sm" style={{ color: "var(--text-secondary)" }}>Try these</span>
               {TRENDING_STOCKS.map((ticker) => (
-                <button
-                  key={ticker}
-                  onClick={() => navigateToStock(ticker)}
-                  className="chip text-xs font-medium"
-                >
+                <button key={ticker} onClick={() => navigateToStock(ticker)} className="chip text-xs font-medium">
                   {ticker}
                 </button>
               ))}
@@ -123,14 +110,11 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ── Cards Row ──────────────────────────────────────────────────── */}
         <div className="px-6 grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl mx-auto">
           <div className="card">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-base">🔥</span>
-              <h2 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                Trending now
-              </h2>
+              <h2 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Trending now</h2>
             </div>
             <div className="space-y-1">
               {trending.map((stock, i) => (
@@ -140,9 +124,7 @@ export default function HomePage() {
                   className="w-full flex items-center justify-between rounded-lg px-2 py-2 transition-colors trending-row"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-xs w-4 text-right shrink-0" style={{ color: "var(--text-secondary)" }}>
-                      {i + 1}
-                    </span>
+                    <span className="text-xs w-4 text-right shrink-0" style={{ color: "var(--text-secondary)" }}>{i + 1}</span>
                     <span className="text-sm" style={{ color: "var(--text-primary)" }}>{stock.name}</span>
                   </div>
                   <span className={`text-sm font-mono-num font-semibold ${changeColor(stock.changePercent)}`}>
@@ -156,18 +138,13 @@ export default function HomePage() {
           <div className="card">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp size={15} className="text-violet" />
-              <h2 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                Popular searches
-              </h2>
+              <h2 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Popular searches</h2>
             </div>
             <div className="flex flex-wrap gap-2">
               {popular.map((name) => (
                 <button
                   key={name}
-                  onClick={() => {
-                    const ticker = name.split(" ")[0].toUpperCase();
-                    navigateToStock(ticker);
-                  }}
+                  onClick={() => navigateToStock(name.split(" ")[0].toUpperCase())}
                   className="chip text-xs"
                 >
                   {name}
@@ -177,7 +154,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* ── Feature Strip ──────────────────────────────────────────────── */}
         <section className="px-6 mt-5 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
           {[
             { icon: Users,     title: "Investor Personas", desc: "See how top investors would evaluate this stock" },
