@@ -23,16 +23,19 @@ function LoginRedirectHandler() {
 
     if (!needsLogin && !next) return;
 
-    // Clean the URL immediately
+    // Wait until the session check is complete before doing anything.
+    // This prevents the modal from flashing for already-logged-in users
+    // and ensures the URL isn't cleaned before we've read the params.
+    if (loading) return;
+
+    // Clean the URL now that we know the session state
     const clean = new URL(window.location.href);
     clean.searchParams.delete("login");
     clean.searchParams.delete("next");
     window.history.replaceState({}, "", clean.toString());
 
-    if (loading) return; // Wait until session is confirmed
-
     if (user && next) {
-      // Just came back from Google OAuth and session is ready — navigate now
+      // Session is active — navigate straight to the intended page
       router.push(next);
     } else if (!user && next) {
       // Not logged in — store destination and show modal

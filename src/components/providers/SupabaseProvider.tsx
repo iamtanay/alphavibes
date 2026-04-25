@@ -53,7 +53,6 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  // Store as a ref-like object to avoid stale closure issues
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
   useEffect(() => {
@@ -69,9 +68,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       setUser(authedUser);
 
       if (authedUser) {
-        // Upsert profile
         upsertUserProfile(session!.user);
-        // Close modal
         setShowLoginModal(false);
         // Fire pending action (e.g. navigate to the originally requested page)
         setPendingAction((prev) => {
@@ -104,10 +101,20 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signInWithGoogle() {
+    // Encode the destination into the callback URL so it survives the full
+    // Google OAuth redirect round-trip (React state is wiped on redirect).
+    const next =
+      new URLSearchParams(window.location.search).get("next") ||
+      (window.location.pathname !== "/" ? window.location.pathname : "");
+
+    const callbackUrl = next
+      ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`
+      : `${window.location.origin}/auth/callback`;
+
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: callbackUrl,
         queryParams: { access_type: "offline", prompt: "consent" },
       },
     });
