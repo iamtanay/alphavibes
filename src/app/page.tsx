@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TrendingUp, Users, BarChart2, Clock } from "lucide-react";
 import SearchBar from "@/components/search/SearchBar";
@@ -12,18 +12,12 @@ import Header from "@/components/layout/Header";
 import BottomTabBar from "@/components/layout/BottomTabBar";
 import { useAuth } from "@/components/providers/SupabaseProvider";
 
-export default function HomePage() {
-  const router = useRouter();
+// Separated into its own component so Suspense can wrap useSearchParams
+function LoginRedirectHandler() {
   const searchParams = useSearchParams();
-  const { requireAuth, setShowLoginModal, user, setPendingAction } = useAuth();
-  const [market, setMarket] = useState<MarketOverview | null>(null);
+  const router = useRouter();
+  const { user, setShowLoginModal, setPendingAction } = useAuth();
 
-  useEffect(() => {
-    api.marketOverview().then(setMarket).catch(() => {});
-  }, []);
-
-  // If middleware redirected here with ?login=1, open the modal automatically.
-  // Once the user signs in, redirect them to the original destination (?next=...).
   useEffect(() => {
     const needsLogin = searchParams.get("login") === "1";
     const next = searchParams.get("next");
@@ -32,7 +26,6 @@ export default function HomePage() {
         setPendingAction(() => () => router.push(next));
       }
       setShowLoginModal(true);
-      // Clean the URL so refreshing doesn't re-trigger the modal
       const clean = new URL(window.location.href);
       clean.searchParams.delete("login");
       clean.searchParams.delete("next");
@@ -40,10 +33,17 @@ export default function HomePage() {
     }
   }, [searchParams, user, setShowLoginModal, setPendingAction, router]);
 
-  // After login, execute any pending action (e.g. navigate to /analyse/RELIANCE)
+  return null;
+}
+
+export default function HomePage() {
+  const router = useRouter();
+  const { requireAuth } = useAuth();
+  const [market, setMarket] = useState<MarketOverview | null>(null);
+
   useEffect(() => {
-    // SupabaseProvider already handles pendingAction on auth state change
-  }, [user]);
+    api.marketOverview().then(setMarket).catch(() => {});
+  }, []);
 
   const trending = market?.trending ?? [
     { ticker: "RELIANCE", name: "Reliance Industries", changePercent: 1.82 },
@@ -59,22 +59,23 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
+      {/* Suspense is required by Next.js whenever useSearchParams is used in a child */}
+      <Suspense fallback={null}>
+        <LoginRedirectHandler />
+      </Suspense>
+
       <Header showSearch={false} />
 
       <main className="max-w-content mx-auto pb-24 md:pb-8">
 
         {/* ── Hero Section ──────────────────────────────────────────────── */}
         <section className="relative px-6 pt-14 pb-12 text-center overflow-hidden">
-
-          {/* Radial glow behind hero */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
               background: "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(124,92,255,0.20) 0%, transparent 70%)",
             }}
           />
-
-          {/* Faint chart lines */}
           <svg
             className="absolute inset-0 w-full h-full pointer-events-none"
             preserveAspectRatio="none"
@@ -82,17 +83,11 @@ export default function HomePage() {
           >
             <polyline
               points="0,320 120,270 260,295 400,195 550,235 700,148 840,168 980,108 1100,135 1200,85"
-              fill="none"
-              stroke="#7C5CFF"
-              strokeWidth="2"
-              opacity="0.10"
+              fill="none" stroke="#7C5CFF" strokeWidth="2" opacity="0.10"
             />
             <polyline
               points="0,370 160,330 310,340 470,255 620,275 770,205 910,215 1060,165 1200,145"
-              fill="none"
-              stroke="#9D6CFF"
-              strokeWidth="1.5"
-              opacity="0.06"
+              fill="none" stroke="#9D6CFF" strokeWidth="1.5" opacity="0.06"
             />
           </svg>
 
@@ -100,7 +95,6 @@ export default function HomePage() {
             <h1 className="text-4xl md:text-[60px] font-extrabold mb-4 leading-[1.1] tracking-tight">
               Understand{" "}
               <span className="gradient-text">any stock</span>
-              {"\n"}
               <br className="hidden md:block" />
               in{" "}
               <span className="gradient-text">60 seconds</span>
@@ -131,7 +125,6 @@ export default function HomePage() {
 
         {/* ── Cards Row ──────────────────────────────────────────────────── */}
         <div className="px-6 grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl mx-auto">
-
           <div className="card">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-base">🔥</span>
@@ -187,9 +180,9 @@ export default function HomePage() {
         {/* ── Feature Strip ──────────────────────────────────────────────── */}
         <section className="px-6 mt-5 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
           {[
-            { icon: Users,    title: "Investor Personas", desc: "See how top investors would evaluate this stock" },
-            { icon: BarChart2, title: "Smart Analysis",   desc: "Key insights on fundamentals, valuation & momentum" },
-            { icon: Clock,    title: "Visual & Simple",   desc: "Powerful data. Easy to understand." },
+            { icon: Users,     title: "Investor Personas", desc: "See how top investors would evaluate this stock" },
+            { icon: BarChart2, title: "Smart Analysis",    desc: "Key insights on fundamentals, valuation & momentum" },
+            { icon: Clock,     title: "Visual & Simple",   desc: "Powerful data. Easy to understand." },
           ].map((f) => {
             const Icon = f.icon;
             return (
