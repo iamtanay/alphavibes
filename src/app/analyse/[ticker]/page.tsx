@@ -17,6 +17,7 @@ import FinancialsTab from "@/components/analysis/FinancialsTab";
 import PeersTab from "@/components/analysis/PeersTab";
 import ShareholdingTab from "@/components/analysis/ShareholdingTab";
 import { SectionErrorBoundary } from "@/components/ui/SectionErrorBoundary";
+import AuthGuard from "@/components/auth/AuthGuard";
 import {
   OverviewSkeleton,
   RatiosSkeleton,
@@ -81,6 +82,7 @@ export default function AnalysePage() {
   }, [ticker, getAnalysis, setAnalysis]);
 
   return (
+    <AuthGuard message="Sign in to access stock analysis, investor personas, and detailed financials.">
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
       <Header />
 
@@ -246,5 +248,6 @@ export default function AnalysePage() {
 
       <BottomTabBar />
     </div>
+    </AuthGuard>
   );
 }

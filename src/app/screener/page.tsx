@@ -8,6 +8,7 @@ import type { ScreenerStock } from "@/types";
 import { formatChange, changeColor, formatMarketCap } from "@/lib/utils";
 import Header from "@/components/layout/Header";
 import BottomTabBar from "@/components/layout/BottomTabBar";
+import AuthGuard from "@/components/auth/AuthGuard";
 
 const PERSONA_LABELS: Record<string, string> = {
   "warren-buffett":       "Buffett",
@@ -79,6 +80,7 @@ export default function ScreenerPage() {
   ];
 
   return (
+    <AuthGuard message="Sign in to access the Nifty 50 screener with persona scores and fundamental filters.">
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
       <Header />
       <main className="max-w-content mx-auto px-4 md:px-8 py-6 pb-24 md:pb-8">
@@ -206,5 +208,6 @@ export default function ScreenerPage() {
       </main>
       <BottomTabBar />
     </div>
+    </AuthGuard>
   );
 }

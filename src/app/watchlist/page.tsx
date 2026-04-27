@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Star, Trash2, TrendingUp, TrendingDown, Minus, Plus } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomTabBar from "@/components/layout/BottomTabBar";
+import AuthGuard from "@/components/auth/AuthGuard";
 import { useAuth, supabase } from "@/components/providers/SupabaseProvider";
 import { api } from "@/lib/api";
 import { formatChange, changeColor } from "@/lib/utils";
@@ -25,7 +26,15 @@ interface QuoteData {
 }
 
 export default function WatchlistPage() {
-  const { user, loading: authLoading, requireAuth, setShowLoginModal } = useAuth();
+  return (
+    <AuthGuard message="Sign in to save stocks and track them in one place.">
+      <WatchlistPageInner />
+    </AuthGuard>
+  );
+}
+
+function WatchlistPageInner() {
+  const { user } = useAuth();
   const router = useRouter();
   const [items, setItems] = useState<WatchlistItem[]>([]);
   const [quotes, setQuotes] = useState<Record<string, QuoteData>>({});
@@ -97,58 +106,8 @@ export default function WatchlistPage() {
     if (!error) setItems((p) => p.filter((i) => i.id !== id));
   }
 
-  // Show skeleton while auth is resolving — avoids flashing the login prompt
-  // for users who ARE logged in but whose session hasn't loaded yet.
-  if (authLoading) {
-    return (
-      <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
-        <Header />
-        <main className="max-w-2xl mx-auto px-4 pt-6 pb-28">
-          <div className="space-y-3 mt-6">
-            {[1, 2, 3].map((n) => (
-              <div key={n} className="h-16 rounded-xl animate-pulse" style={{ backgroundColor: "var(--surface-2)" }} />
-            ))}
-          </div>
-        </main>
-        <BottomTabBar />
-      </div>
-    );
-  }
-
-  // Auth resolved — user is not logged in
-  if (!user) {
-    return (
-      <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
-        <Header />
-        <main className="max-w-xl mx-auto px-4 py-20 pb-28 text-center">
-          <div
-            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
-            style={{ backgroundColor: "rgba(124,92,255,0.12)" }}
-          >
-            <Star size={28} className="text-violet" />
-          </div>
-          <h1 className="text-xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>
-            Your Watchlist
-          </h1>
-          <p className="text-sm leading-relaxed mb-6" style={{ color: "var(--text-secondary)" }}>
-            Sign in to save stocks and track them in one place.
-          </p>
-          <button
-            onClick={() => {
-              // Store pending action so after Google login the user
-              // sees their watchlist immediately
-              requireAuth(() => router.push("/watchlist"));
-            }}
-            className="px-6 py-2.5 rounded-xl text-sm font-medium text-white"
-            style={{ background: "linear-gradient(135deg, #7C5CFF, #9D6CFF)" }}
-          >
-            Sign in to continue
-          </button>
-        </main>
-        <BottomTabBar />
-      </div>
-    );
-  }
+  // Watchlist is only rendered when user is authenticated (AuthGuard above).
+  // user is guaranteed non-null here.
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>

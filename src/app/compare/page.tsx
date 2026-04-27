@@ -7,6 +7,7 @@ import type { AnalysisResponse } from "@/types";
 import { formatChange, changeColor, formatMarketCap } from "@/lib/utils";
 import Header from "@/components/layout/Header";
 import BottomTabBar from "@/components/layout/BottomTabBar";
+import AuthGuard from "@/components/auth/AuthGuard";
 
 export default function ComparePage() {
   const [tickers, setTickers] = useState<string[]>(["RELIANCE", "TCS"]);
@@ -61,6 +62,7 @@ export default function ComparePage() {
   ];
 
   return (
+    <AuthGuard message="Sign in to compare stocks side by side with key metrics and signals.">
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
       <Header />
       <main className="max-w-content mx-auto px-4 md:px-8 py-6 pb-24 md:pb-8">
@@ -153,5 +155,6 @@ export default function ComparePage() {
       </main>
       <BottomTabBar />
     </div>
+    </AuthGuard>
   );
 }

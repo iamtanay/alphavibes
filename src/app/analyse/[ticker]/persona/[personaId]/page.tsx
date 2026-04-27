@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import type { AnalysisResponse, Persona } from "@/types";
 import Header from "@/components/layout/Header";
 import BottomTabBar from "@/components/layout/BottomTabBar";
+import AuthGuard from "@/components/auth/AuthGuard";
 
 /* ── Persona philosophy meta ─────────────────────────────────────────────── */
 const PERSONA_PHILOSOPHY: Record<string, {
@@ -173,6 +174,14 @@ export default function PersonaDetailPage() {
   const ticker    = (params.ticker as string).toUpperCase();
   const personaId = params.personaId as string;
 
+  return (
+    <AuthGuard message="Sign in to view investor persona analysis for this stock.">
+      <PersonaDetailPageInner ticker={ticker} personaId={personaId} router={router} />
+    </AuthGuard>
+  );
+}
+
+function PersonaDetailPageInner({ ticker, personaId, router }: { ticker: string; personaId: string; router: ReturnType<typeof useRouter> }) {
   const [data,    setData]    = useState<AnalysisResponse | null>(null);
   const [persona, setPersona] = useState<Persona | null>(null);
   const [mounted, setMounted] = useState(false);

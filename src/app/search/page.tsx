@@ -5,10 +5,12 @@ import BottomTabBar from "@/components/layout/BottomTabBar";
 import SearchBar from "@/components/search/SearchBar";
 import { TRENDING_STOCKS } from "@/config";
 import { useRouter } from "next/navigation";
+import AuthGuard from "@/components/auth/AuthGuard";
 
 export default function SearchPage() {
   const router = useRouter();
   return (
+    <AuthGuard message="Sign in to search and analyse Indian stocks.">
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
       <Header showSearch={false} />
       <main className="max-w-xl mx-auto px-4 py-6 pb-24">
@@ -27,5 +29,6 @@ export default function SearchPage() {
       </main>
       <BottomTabBar />
     </div>
+    </AuthGuard>
   );
 }
