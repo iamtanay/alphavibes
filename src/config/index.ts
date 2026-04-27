@@ -17,7 +17,11 @@ export const SITE_CONFIG = {
 
 export const TRENDING_STOCKS = ["RELIANCE", "TCS", "INFY", "HDFCBANK", "WIPRO", "ICICIBANK"];
 
-export const POPULAR_SEARCHES = [
-  "Infosys", "ICICI Bank", "Larsen & Toubro",
-  "Tata Motors", "Wipro", "Bharti Airtel",
+export const POPULAR_SEARCHES: { label: string; ticker: string }[] = [
+  { label: "Infosys",          ticker: "INFY" },
+  { label: "ICICI Bank",       ticker: "ICICIBANK" },
+  { label: "Larsen & Toubro",  ticker: "LT" },
+  { label: "Tata Motors",      ticker: "TATAMOTORS" },
+  { label: "Wipro",            ticker: "WIPRO" },
+  { label: "Bharti Airtel",    ticker: "BHARTIARTL" },
 ];

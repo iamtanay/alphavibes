@@ -32,7 +32,10 @@ export default function HomePage() {
     { ticker: "HDFCBANK", name: "HDFC Bank",            changePercent: 0.85 },
   ];
 
-  const popular = market?.popularSearches ?? POPULAR_SEARCHES;
+  const popularRaw = market?.popularSearches;
+  const popular: { label: string; ticker: string }[] = popularRaw
+    ? popularRaw.map((name) => ({ label: name, ticker: name.split(" ")[0].toUpperCase() }))
+    : POPULAR_SEARCHES;
 
   function navigateToStock(ticker: string) {
     requireAuth(() => router.push(`/analyse/${ticker}`));
@@ -139,13 +142,13 @@ export default function HomePage() {
               </h2>
             </div>
             <div className="flex flex-wrap gap-2">
-              {popular.map((name) => (
+              {popular.map((item) => (
                 <button
-                  key={name}
-                  onClick={() => navigateToStock(name.split(" ")[0].toUpperCase())}
+                  key={item.ticker}
+                  onClick={() => navigateToStock(item.ticker)}
                   className="chip text-xs"
                 >
-                  {name}
+                  {item.label}
                 </button>
               ))}
             </div>

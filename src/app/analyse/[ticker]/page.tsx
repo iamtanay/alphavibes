@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Star, Share2 } from "lucide-react";
 import { api } from "@/lib/api";
@@ -18,6 +18,7 @@ import PeersTab from "@/components/analysis/PeersTab";
 import ShareholdingTab from "@/components/analysis/ShareholdingTab";
 import { SectionErrorBoundary } from "@/components/ui/SectionErrorBoundary";
 import AuthGuard from "@/components/auth/AuthGuard";
+import { useAuth, supabase } from "@/components/providers/SupabaseProvider";
 import {
   OverviewSkeleton,
   RatiosSkeleton,
@@ -51,17 +52,21 @@ export default function AnalysePage() {
   const params = useParams();
   const router = useRouter();
   const ticker = (params.ticker as string).toUpperCase();
+  const { user } = useAuth();
 
   const getAnalysis  = useAppStore((s) => s.getAnalysis);
   const setAnalysis  = useAppStore((s) => s.setAnalysis);
 
-  const [data,       setData]       = useState<AnalysisResponse | null>(null);
-  const [loading,    setLoading]    = useState(true);
-  const [error,      setError]      = useState<string | null>(null);
-  const [activeTab,  setActiveTab]  = useState<TabId>("overview");
+  const [data,           setData]           = useState<AnalysisResponse | null>(null);
+  const [loading,        setLoading]        = useState(true);
+  const [error,          setError]          = useState<string | null>(null);
+  const [activeTab,      setActiveTab]      = useState<TabId>("overview");
+  const [inWatchlist,    setInWatchlist]    = useState(false);
+  const [watchlistId,    setWatchlistId]    = useState<string | null>(null);
+  const [watchlistBusy,  setWatchlistBusy]  = useState(false);
+  const [shareToast,     setShareToast]     = useState<string | null>(null);
 
   useEffect(() => {
-    // Try cache first — avoids re-fetching on back-navigation from persona page
     const cached = getAnalysis(ticker);
     if (cached) {
       setData(cached);
@@ -74,12 +79,70 @@ export default function AnalysePage() {
     api
       .analyse(ticker)
       .then((d) => {
-        setAnalysis(ticker, d); // write to 15-min cache
+        setAnalysis(ticker, d);
         setData(d);
       })
       .catch(() => setError("Failed to load analysis. Please try again."))
       .finally(() => setLoading(false));
   }, [ticker, getAnalysis, setAnalysis]);
+
+  // Check watchlist status whenever user or ticker changes
+  const checkWatchlist = useCallback(async () => {
+    if (!user) { setInWatchlist(false); setWatchlistId(null); return; }
+    const { data: rows } = await supabase
+      .from("watchlist")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("ticker", ticker)
+      .maybeSingle();
+    if (rows) {
+      setInWatchlist(true);
+      setWatchlistId(rows.id);
+    } else {
+      setInWatchlist(false);
+      setWatchlistId(null);
+    }
+  }, [user, ticker]);
+
+  useEffect(() => { checkWatchlist(); }, [checkWatchlist]);
+
+  async function toggleWatchlist() {
+    if (!user) return;
+    setWatchlistBusy(true);
+    try {
+      if (inWatchlist && watchlistId) {
+        await supabase.from("watchlist").delete().eq("id", watchlistId);
+        setInWatchlist(false);
+        setWatchlistId(null);
+      } else {
+        const { data: inserted } = await supabase
+          .from("watchlist")
+          .insert({ user_id: user.id, ticker })
+          .select("id")
+          .single();
+        setInWatchlist(true);
+        setWatchlistId(inserted?.id ?? null);
+      }
+    } finally {
+      setWatchlistBusy(false);
+    }
+  }
+
+  async function handleShare() {
+    const stockName = data?.quote.name ?? ticker;
+    const shareData = {
+      title: `${stockName} (${ticker}) — AlphaVibes`,
+      text: `Check out ${stockName} analysis on AlphaVibes`,
+      url: window.location.href,
+    };
+    if (navigator.share) {
+      try { await navigator.share(shareData); } catch { /* user cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(window.location.href);
+      setShareToast("Link copied!");
+      setTimeout(() => setShareToast(null), 2500);
+    }
+  }
 
   return (
     <AuthGuard message="Sign in to access stock analysis, investor personas, and detailed financials.">
@@ -117,12 +180,40 @@ export default function AnalysePage() {
                     <h1 className="text-lg md:text-xl font-semibold text-text-primary truncate">
                       {data?.quote.name ?? ticker}
                     </h1>
-                    <button className="shrink-0 text-text-secondary hover:text-warning transition-colors">
-                      <Star size={16} />
+
+                    {/* Watchlist star */}
+                    <button
+                      onClick={toggleWatchlist}
+                      disabled={watchlistBusy || !user}
+                      title={inWatchlist ? "Remove from watchlist" : "Add to watchlist"}
+                      className="shrink-0 transition-colors disabled:opacity-40"
+                      style={{ color: inWatchlist ? "var(--warning, #f59e0b)" : "var(--text-secondary)" }}
+                    >
+                      <Star
+                        size={16}
+                        fill={inWatchlist ? "currentColor" : "none"}
+                        stroke="currentColor"
+                      />
                     </button>
-                    <button className="shrink-0 text-text-secondary hover:text-violet transition-colors">
-                      <Share2 size={16} />
-                    </button>
+
+                    {/* Share button */}
+                    <div className="relative shrink-0">
+                      <button
+                        onClick={handleShare}
+                        title="Share"
+                        className="text-text-secondary hover:text-violet transition-colors"
+                      >
+                        <Share2 size={16} />
+                      </button>
+                      {shareToast && (
+                        <span
+                          className="absolute left-1/2 -translate-x-1/2 top-7 whitespace-nowrap text-xs px-2 py-1 rounded-lg z-50 pointer-events-none"
+                          style={{ backgroundColor: "var(--surface-3)", color: "var(--text-primary)", boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }}
+                        >
+                          {shareToast}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <p className="text-xs text-text-secondary mb-2">
                     {data?.quote.exchange}: {ticker}
@@ -251,3 +342,4 @@ export default function AnalysePage() {
     </AuthGuard>
   );
 }
+
