@@ -1,12 +1,19 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
 import { createClient, SupabaseClient, Session, User } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase: SupabaseClient = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface AuthUser {
   id: string;
@@ -22,6 +29,8 @@ interface SupabaseContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  // Returns true if authed. If not, opens login modal and optionally
+  // stores a callback to run after login.
   requireAuth: (callback?: () => void) => boolean;
   showLoginModal: boolean;
   setShowLoginModal: (v: boolean) => void;
@@ -31,18 +40,16 @@ interface SupabaseContextType {
 
 const SupabaseContext = createContext<SupabaseContextType | null>(null);
 
-function userFromSupabase(user: User): AuthUser {
-  const meta = user.user_metadata || {};
-  const fullName: string = meta.full_name || meta.name || "";
-  const parts = fullName.trim().split(" ");
-  const firstName = meta.given_name || parts[0] || "";
-  const lastName = meta.family_name || parts.slice(1).join(" ") || "";
+function toAuthUser(user: User): AuthUser {
+  const m = user.user_metadata ?? {};
+  const full = (m.full_name || m.name || "") as string;
+  const parts = full.trim().split(" ");
   return {
     id: user.id,
-    email: user.email || "",
-    firstName,
-    lastName,
-    avatarUrl: meta.avatar_url || meta.picture || "",
+    email: user.email ?? "",
+    firstName: m.given_name || parts[0] || "",
+    lastName: m.family_name || parts.slice(1).join(" ") || "",
+    avatarUrl: m.avatar_url || m.picture || "",
   };
 }
 
@@ -52,42 +59,46 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
-  // Use a ref for pendingAction so it is never stale inside closures,
-  // and also expose it as state so consumers can read it reactively.
-  const pendingActionRef = useRef<(() => void) | null>(null);
-  const [pendingAction, _setPendingActionState] = useState<(() => void) | null>(null);
+  // pendingAction lives in a ref so callbacks set before a re-render
+  // are never lost to stale closures.
+  const pendingRef = useRef<(() => void) | null>(null);
+  const [pendingAction, _setPending] = useState<(() => void) | null>(null);
 
   const setPendingAction = useCallback((fn: (() => void) | null) => {
-    pendingActionRef.current = fn;
-    _setPendingActionState(fn ? () => fn : null);
+    pendingRef.current = fn;
+    _setPending(fn ? () => fn : null);
   }, []);
 
   useEffect(() => {
-    // Get initial session
+    // 1. Hydrate from existing session (covers page refresh)
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setUser(session?.user ? userFromSupabase(session.user) : null);
+      setUser(session?.user ? toAuthUser(session.user) : null);
       setLoading(false);
     });
 
-    // Listen for auth changes (fires on sign-in, sign-out, token refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      const authedUser = session?.user ? userFromSupabase(session.user) : null;
+    // 2. React to every auth event:
+    //    - SIGNED_IN fires after Google OAuth (implicit: fragment parsed by SDK)
+    //    - SIGNED_OUT fires after signOut()
+    //    - TOKEN_REFRESHED fires on silent refresh
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const authedUser = session?.user ? toAuthUser(session.user) : null;
       setSession(session);
       setUser(authedUser);
       setLoading(false);
 
       if (authedUser) {
-        upsertUserProfile(session!.user);
+        upsertProfile(session!.user);
         setShowLoginModal(false);
 
-        // Fire any pending action (stored before modal was opened).
-        // Use ref so we always get the latest value, not a stale closure.
-        const action = pendingActionRef.current;
+        // Fire and clear any pending navigation callback
+        const action = pendingRef.current;
         if (action) {
-          pendingActionRef.current = null;
-          _setPendingActionState(null);
-          setTimeout(() => action(), 50);
+          pendingRef.current = null;
+          _setPending(null);
+          setTimeout(action, 50);
         }
       }
     });
@@ -96,15 +107,15 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function upsertUserProfile(user: User) {
-    const profile = userFromSupabase(user);
+  async function upsertProfile(user: User) {
+    const u = toAuthUser(user);
     await supabase.from("profiles").upsert(
       {
-        id: user.id,
-        email: profile.email,
-        first_name: profile.firstName,
-        last_name: profile.lastName,
-        avatar_url: profile.avatarUrl,
+        id: u.id,
+        email: u.email,
+        first_name: u.firstName,
+        last_name: u.lastName,
+        avatar_url: u.avatarUrl,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "id" }
@@ -112,21 +123,16 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signInWithGoogle() {
-    // Read the intended destination from sessionStorage (set by requireAuth
-    // or handleWatchlist before opening the modal). This survives the full
-    // Google OAuth redirect round-trip because sessionStorage persists
-    // across same-origin navigations within the same tab.
-    const next = sessionStorage.getItem("authRedirectNext") || "";
-
-    const callbackUrl = next
-      ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`
-      : `${window.location.origin}/auth/callback`;
-
+    // After Google auth, Supabase SDK automatically parses the #access_token
+    // fragment on the redirectTo page and fires onAuthStateChange('SIGNED_IN').
+    // We redirect back to the current page so the pending callback can fire.
+    //
+    // If the user came from a protected page (e.g. /analyse/RELIANCE), the
+    // pending callback (set by requireAuth) will navigate them there after login.
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: callbackUrl,
-        queryParams: { access_type: "offline", prompt: "consent" },
+        redirectTo: window.location.href, // come back to wherever they are
       },
     });
   }
@@ -140,14 +146,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const requireAuth = useCallback(
     (callback?: () => void): boolean => {
       if (user) return true;
-      if (callback) {
-        // Store callback in ref (survives re-renders, used if modal login succeeds
-        // without a page reload — e.g. future email/password auth).
-        setPendingAction(callback);
-        // Also store the current page in sessionStorage so signInWithGoogle
-        // can carry it through the OAuth redirect.
-        sessionStorage.setItem("authRedirectNext", window.location.pathname);
-      }
+      if (callback) setPendingAction(callback);
       setShowLoginModal(true);
       return false;
     },
@@ -157,10 +156,16 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   return (
     <SupabaseContext.Provider
       value={{
-        user, session, loading,
-        signInWithGoogle, signOut, requireAuth,
-        showLoginModal, setShowLoginModal,
-        pendingAction, setPendingAction,
+        user,
+        session,
+        loading,
+        signInWithGoogle,
+        signOut,
+        requireAuth,
+        showLoginModal,
+        setShowLoginModal,
+        pendingAction,
+        setPendingAction,
       }}
     >
       {children}
@@ -170,6 +175,6 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(SupabaseContext);
-  if (!ctx) throw new Error("useAuth must be used inside SupabaseProvider");
+  if (!ctx) throw new Error("useAuth must be used inside <SupabaseProvider>");
   return ctx;
 }
