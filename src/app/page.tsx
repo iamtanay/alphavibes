@@ -15,51 +15,60 @@ import { useAuth } from "@/components/providers/SupabaseProvider";
 function LoginRedirectHandler() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user, loading, setShowLoginModal, setPendingAction } = useAuth();
+  const { user, loading } = useAuth();
 
-  // Keep the `next` destination in a ref so it survives the URL clean-up.
-  // searchParams is a snapshot — once we wipe the query string the value is gone,
-  // but we still need it after loading resolves.
+  // Capture params into refs on first render BEFORE the URL is cleaned.
+  // searchParams is a stable snapshot — it won't update after replaceState.
+  // The effect dependencies include `loading` and `user` so Phase 2 fires
+  // when auth state resolves, but we read from refs (not searchParams) by then.
   const nextRef = useRef<string | null>(null);
-  const needsLoginRef = useRef(false);
-  const handledRef = useRef(false);
+  const isLoginRedirectRef = useRef(false);
+  const didHandleRef = useRef(false);
 
-  // Phase 1 — capture params and clean the URL immediately on mount.
+  // Phase 1: capture + clean URL. Runs once on mount.
   useEffect(() => {
-    const needsLogin = searchParams.get("login") === "1";
     const next = searchParams.get("next");
+    const login = searchParams.get("login");
+    if (!next && !login) return;
 
-    if (!needsLogin && !next) return;
-
-    // Snapshot the values into refs before wiping the URL
     nextRef.current = next;
-    needsLoginRef.current = needsLogin;
+    isLoginRedirectRef.current = login === "1";
 
+    // Clean the URL so the params don't sit in the address bar
     const clean = new URL(window.location.href);
     clean.searchParams.delete("login");
     clean.searchParams.delete("next");
     window.history.replaceState({}, "", clean.toString());
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // intentionally only on mount — we captured the initial params
+  }, []); // empty deps — intentionally only on mount
 
-  // Phase 2 — act once session state is known.
+  // Phase 2: act once auth state is known. Runs when loading/user changes.
   useEffect(() => {
-    if (loading) return;                          // still resolving
-    if (!nextRef.current) return;                 // no destination to redirect to
-    if (handledRef.current) return;               // already handled
-    handledRef.current = true;
+    if (loading) return;                   // session not resolved yet
+    if (!nextRef.current) return;          // no destination captured
+    if (didHandleRef.current) return;      // already handled, don't repeat
+    didHandleRef.current = true;
 
     const next = nextRef.current;
 
     if (user) {
-      // Logged in — go straight to the intended page
+      // User is authenticated — navigate to the originally requested page.
+      // Also clear the sessionStorage redirect key since we're handling it here.
+      sessionStorage.removeItem("authRedirectNext");
       router.push(next);
-    } else {
-      // Not logged in — store destination and open modal
-      setPendingAction(() => () => router.push(next));
-      setShowLoginModal(true);
     }
-  }, [loading, user, router, setShowLoginModal, setPendingAction]);
+    // If !user: middleware already redirected them here with ?login=1&next=...
+    // because they weren't authed. The LoginModal is already mounted in layout.tsx.
+    // We just need to store the destination and open it.
+    // But we don't do that here — the middleware redirect means they hit this page
+    // unauthenticated. They'll click "Sign in" from the visible modal trigger or
+    // use the header/tab bar. The `next` is already in sessionStorage if they
+    // came through requireAuth. If they came through a direct URL (middleware),
+    // store it now so signInWithGoogle picks it up.
+    else {
+      sessionStorage.setItem("authRedirectNext", next);
+    }
+  }, [loading, user, router]);
 
   return null;
 }

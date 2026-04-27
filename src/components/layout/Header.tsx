@@ -15,7 +15,7 @@ interface HeaderProps {
 
 export default function Header({ showSearch = true }: HeaderProps) {
   const { theme, toggleTheme } = useAppStore();
-  const { user, signOut, setShowLoginModal, setPendingAction } = useAuth();
+  const { user, signOut, setShowLoginModal } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -35,8 +35,8 @@ export default function Header({ showSearch = true }: HeaderProps) {
     if (user) {
       router.push("/watchlist");
     } else {
-      // Store destination so Google OAuth can carry it through the redirect
-      setPendingAction(() => () => router.push("/watchlist"));
+      // Store destination in sessionStorage so it survives the OAuth redirect
+      sessionStorage.setItem("authRedirectNext", "/watchlist");
       setShowLoginModal(true);
     }
   }
@@ -74,9 +74,7 @@ export default function Header({ showSearch = true }: HeaderProps) {
 
       {/* ── Desktop Nav Links ─────────────────── */}
       <nav className="hidden md:flex items-center gap-1">
-        {[
-          { label: "About", href: "/about" },
-        ].map(({ label, href }) => (
+        {[{ label: "About", href: "/about" }].map(({ label, href }) => (
           <Link
             key={label}
             href={href}
@@ -101,7 +99,6 @@ export default function Header({ showSearch = true }: HeaderProps) {
           Watchlist
         </button>
 
-        {/* Screener */}
         <Link
           href="/screener"
           className="px-3 py-1.5 text-sm rounded-lg transition-colors"
@@ -112,7 +109,6 @@ export default function Header({ showSearch = true }: HeaderProps) {
           Screener
         </Link>
 
-        {/* Compare */}
         <Link
           href="/compare"
           className="px-3 py-1.5 text-sm rounded-lg flex items-center gap-1.5 transition-colors"
@@ -157,17 +153,13 @@ export default function Header({ showSearch = true }: HeaderProps) {
             ) : (
               <div
                 className="w-full h-full flex items-center justify-center text-xs font-semibold"
-                style={{
-                  background: "linear-gradient(135deg, #7C5CFF, #9D6CFF)",
-                  color: "white",
-                }}
+                style={{ background: "linear-gradient(135deg, #7C5CFF, #9D6CFF)", color: "white" }}
               >
                 {user ? initials : <span style={{ color: "var(--text-secondary)", fontSize: 16 }}>👤</span>}
               </div>
             )}
           </button>
 
-          {/* Dropdown */}
           {profileOpen && (
             <div
               className="absolute right-0 top-[calc(100%+8px)] rounded-xl overflow-hidden z-50 min-w-[210px]"

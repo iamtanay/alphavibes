@@ -25,7 +25,7 @@ interface QuoteData {
 }
 
 export default function WatchlistPage() {
-  const { user, requireAuth, setShowLoginModal } = useAuth();
+  const { user, loading: authLoading, setShowLoginModal } = useAuth();
   const router = useRouter();
   const [items, setItems] = useState<WatchlistItem[]>([]);
   const [quotes, setQuotes] = useState<Record<string, QuoteData>>({});
@@ -33,13 +33,6 @@ export default function WatchlistPage() {
   const [addTicker, setAddTicker] = useState("");
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState("");
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!user) {
-      setShowLoginModal(true);
-    }
-  }, [user, setShowLoginModal]);
 
   const fetchWatchlist = useCallback(async () => {
     if (!user) return;
@@ -50,7 +43,6 @@ export default function WatchlistPage() {
         .select("id, ticker, added_at")
         .eq("user_id", user.id)
         .order("added_at", { ascending: false });
-
       if (error) throw error;
       setItems(data || []);
     } catch (e) {
@@ -64,30 +56,20 @@ export default function WatchlistPage() {
     fetchWatchlist();
   }, [fetchWatchlist]);
 
-  // Load quotes for all watchlist items
+  // Load quotes for watchlist items
   useEffect(() => {
     if (!items.length) return;
     items.forEach(async (item) => {
-      if (quotes[item.ticker]) return; // already fetched
+      if (quotes[item.ticker]) return;
       setQuotes((prev) => ({
         ...prev,
-        [item.ticker]: {
-          ticker: item.ticker, name: item.ticker,
-          price: 0, changePercent: 0, loading: true, error: false,
-        },
+        [item.ticker]: { ticker: item.ticker, name: item.ticker, price: 0, changePercent: 0, loading: true, error: false },
       }));
       try {
         const q = await api.quote(item.ticker);
         setQuotes((prev) => ({
           ...prev,
-          [item.ticker]: {
-            ticker: item.ticker,
-            name: q.name || item.ticker,
-            price: q.price ?? 0,
-            changePercent: q.changePercent ?? 0,
-            loading: false,
-            error: false,
-          },
+          [item.ticker]: { ticker: item.ticker, name: q.name || item.ticker, price: q.price ?? 0, changePercent: q.changePercent ?? 0, loading: false, error: false },
         }));
       } catch {
         setQuotes((prev) => ({
@@ -101,19 +83,13 @@ export default function WatchlistPage() {
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
-    if (!user) { requireAuth(); return; }
+    if (!user) return;
     const ticker = addTicker.trim().toUpperCase();
     if (!ticker) return;
-    if (items.find((i) => i.ticker === ticker)) {
-      setAddError("Already in watchlist");
-      return;
-    }
-    setAdding(true);
-    setAddError("");
+    if (items.find((i) => i.ticker === ticker)) { setAddError("Already in watchlist"); return; }
+    setAdding(true); setAddError("");
     try {
-      const { error } = await supabase
-        .from("watchlist")
-        .insert({ user_id: user.id, ticker });
+      const { error } = await supabase.from("watchlist").insert({ user_id: user.id, ticker });
       if (error) throw error;
       setAddTicker("");
       await fetchWatchlist();
@@ -126,12 +102,28 @@ export default function WatchlistPage() {
 
   async function handleRemove(id: string) {
     const { error } = await supabase.from("watchlist").delete().eq("id", id);
-    if (!error) {
-      setItems((prev) => prev.filter((i) => i.id !== id));
-    }
+    if (!error) setItems((prev) => prev.filter((i) => i.id !== id));
   }
 
-  // Not logged in state
+  // While auth is resolving, show nothing — avoids flashing the "not logged in" UI
+  // for users who ARE logged in but whose session hasn't loaded yet.
+  if (authLoading) {
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
+        <Header />
+        <main className="max-w-2xl mx-auto px-4 pt-6 pb-28">
+          <div className="space-y-2 mt-6">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="h-[62px] rounded-xl animate-pulse" style={{ backgroundColor: "var(--surface-2)" }} />
+            ))}
+          </div>
+        </main>
+        <BottomTabBar />
+      </div>
+    );
+  }
+
+  // Auth resolved and user is not logged in
   if (!user) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
@@ -148,7 +140,10 @@ export default function WatchlistPage() {
             Sign in to save stocks and track them in one place.
           </p>
           <button
-            onClick={() => setShowLoginModal(true)}
+            onClick={() => {
+              sessionStorage.setItem("authRedirectNext", "/watchlist");
+              setShowLoginModal(true);
+            }}
             className="px-6 py-2.5 rounded-xl text-sm font-medium text-white"
             style={{ background: "linear-gradient(135deg, #7C5CFF, #9D6CFF)" }}
           >
@@ -167,9 +162,7 @@ export default function WatchlistPage() {
       <main className="max-w-2xl mx-auto px-4 pt-6 pb-28 md:pb-8">
         <div className="flex items-center gap-3 mb-6">
           <Star size={20} className="text-violet" />
-          <h1 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
-            My Watchlist
-          </h1>
+          <h1 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>My Watchlist</h1>
           <span
             className="text-xs px-2 py-0.5 rounded-full"
             style={{ backgroundColor: "rgba(124,92,255,0.12)", color: "var(--violet)" }}
@@ -178,7 +171,7 @@ export default function WatchlistPage() {
           </span>
         </div>
 
-        {/* ── Add ticker form ── */}
+        {/* Add ticker form */}
         <form onSubmit={handleAdd} className="flex gap-2 mb-6">
           <div className="flex-1 relative">
             <input
@@ -187,11 +180,7 @@ export default function WatchlistPage() {
               onChange={(e) => { setAddTicker(e.target.value.toUpperCase()); setAddError(""); }}
               placeholder="Add ticker (e.g. RELIANCE)"
               className="w-full px-4 py-2.5 rounded-xl text-sm outline-none"
-              style={{
-                backgroundColor: "var(--surface-2)",
-                border: "1px solid var(--border)",
-                color: "var(--text-primary)",
-              }}
+              style={{ backgroundColor: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
               onFocus={(e) => (e.currentTarget.style.borderColor = "var(--violet)")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
             />
@@ -207,19 +196,13 @@ export default function WatchlistPage() {
           </button>
         </form>
 
-        {addError && (
-          <p className="text-xs mb-4 -mt-3" style={{ color: "#ef4444" }}>{addError}</p>
-        )}
+        {addError && <p className="text-xs mb-4 -mt-3" style={{ color: "#ef4444" }}>{addError}</p>}
 
-        {/* ── Watchlist items ── */}
+        {/* Watchlist items */}
         {loading ? (
           <div className="space-y-2">
             {[1, 2, 3].map((n) => (
-              <div
-                key={n}
-                className="h-[62px] rounded-xl animate-pulse"
-                style={{ backgroundColor: "var(--surface-2)" }}
-              />
+              <div key={n} className="h-[62px] rounded-xl animate-pulse" style={{ backgroundColor: "var(--surface-2)" }} />
             ))}
           </div>
         ) : items.length === 0 ? (
@@ -230,9 +213,7 @@ export default function WatchlistPage() {
             >
               <Star size={24} className="text-violet" />
             </div>
-            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-              No stocks yet. Add one above to get started.
-            </p>
+            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>No stocks yet. Add one above to get started.</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -240,17 +221,12 @@ export default function WatchlistPage() {
               const q = quotes[item.ticker];
               const up = (q?.changePercent ?? 0) > 0;
               const dn = (q?.changePercent ?? 0) < 0;
-
               return (
                 <div
                   key={item.id}
                   className="flex items-center justify-between px-4 py-3 rounded-xl transition-colors"
-                  style={{
-                    backgroundColor: "var(--surface-2)",
-                    border: "1px solid var(--border)",
-                  }}
+                  style={{ backgroundColor: "var(--surface-2)", border: "1px solid var(--border)" }}
                 >
-                  {/* Left: click to analyse */}
                   <button
                     onClick={() => router.push(`/analyse/${item.ticker}`)}
                     className="flex items-center gap-3 text-left flex-1 min-w-0"
@@ -262,24 +238,16 @@ export default function WatchlistPage() {
                       {item.ticker.slice(0, 2)}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>
-                        {item.ticker}
-                      </p>
+                      <p className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>{item.ticker}</p>
                       {q && !q.loading && !q.error && (
-                        <p className="text-xs truncate" style={{ color: "var(--text-secondary)" }}>
-                          {q.name}
-                        </p>
+                        <p className="text-xs truncate" style={{ color: "var(--text-secondary)" }}>{q.name}</p>
                       )}
                     </div>
                   </button>
 
-                  {/* Right: price + remove */}
                   <div className="flex items-center gap-3 shrink-0 ml-3">
                     {q?.loading ? (
-                      <div
-                        className="w-16 h-8 rounded-lg animate-pulse"
-                        style={{ backgroundColor: "var(--surface-3)" }}
-                      />
+                      <div className="w-16 h-8 rounded-lg animate-pulse" style={{ backgroundColor: "var(--surface-3)" }} />
                     ) : q?.error ? (
                       <span className="text-xs" style={{ color: "var(--text-secondary)" }}>—</span>
                     ) : q ? (
@@ -298,14 +266,8 @@ export default function WatchlistPage() {
                       onClick={() => handleRemove(item.id)}
                       className="p-1.5 rounded-lg transition-colors"
                       style={{ color: "var(--text-secondary)" }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.1)";
-                        e.currentTarget.style.color = "#ef4444";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "transparent";
-                        e.currentTarget.style.color = "var(--text-secondary)";
-                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.1)"; e.currentTarget.style.color = "#ef4444"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "var(--text-secondary)"; }}
                       aria-label={`Remove ${item.ticker}`}
                     >
                       <Trash2 size={14} />

@@ -19,7 +19,7 @@ export default function SearchBar({ compact, autoFocus }: SearchBarProps) {
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState(false);
   const router     = useRouter();
-  const { requireAuth } = useAuth();
+  const { user, setShowLoginModal } = useAuth();
   const inputRef   = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -43,8 +43,11 @@ export default function SearchBar({ compact, autoFocus }: SearchBarProps) {
   };
 
   const handleSelect = (ticker: string) => {
-    if (!requireAuth()) {
+    if (!user) {
       setIsOpen(false);
+      // Store destination so it survives the OAuth redirect
+      sessionStorage.setItem("authRedirectNext", `/analyse/${ticker}`);
+      setShowLoginModal(true);
       return;
     }
     setQuery(""); setIsOpen(false);
@@ -59,8 +62,6 @@ export default function SearchBar({ compact, autoFocus }: SearchBarProps) {
   const handleFocus = () => {
     setFocused(true);
     if (query) setIsOpen(true);
-    // Prompt login on focus if not authenticated
-    // We don't block typing, only navigation
   };
 
   return (

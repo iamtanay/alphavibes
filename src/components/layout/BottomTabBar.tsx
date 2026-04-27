@@ -10,7 +10,7 @@ import { useAppStore } from "@/store";
 export default function BottomTabBar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, signOut, setShowLoginModal, setPendingAction } = useAuth();
+  const { user, signOut, setShowLoginModal } = useAuth();
   const { theme, toggleTheme } = useAppStore();
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -36,8 +36,8 @@ export default function BottomTabBar() {
     if (user) {
       router.push("/watchlist");
     } else {
-      // Store the destination so the modal's Google button can carry it through OAuth
-      setPendingAction(() => () => router.push("/watchlist"));
+      // Store destination in sessionStorage so it survives the OAuth redirect
+      sessionStorage.setItem("authRedirectNext", "/watchlist");
       setShowLoginModal(true);
     }
   }
@@ -107,7 +107,6 @@ export default function BottomTabBar() {
           </span>
         </button>
 
-        {/* Popup menu anchored above the tab bar */}
         {profileOpen && (
           <div
             className="absolute bottom-[calc(100%+8px)] right-0 rounded-xl overflow-hidden z-50 min-w-[200px]"

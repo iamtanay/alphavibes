@@ -33,5 +33,6 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // Code missing or exchange failed — back to home
   return NextResponse.redirect(`${origin}/`);
 }
