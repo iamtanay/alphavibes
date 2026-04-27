@@ -19,7 +19,7 @@ import { useAuth } from "@/components/providers/SupabaseProvider";
 
 export default function HomePage() {
   const router = useRouter();
-  const { requireAuth } = useAuth();
+  const { user, setShowLoginModal } = useAuth();
   const [market, setMarket] = useState<MarketOverview | null>(null);
 
   useEffect(() => {
@@ -38,7 +38,12 @@ export default function HomePage() {
     : POPULAR_SEARCHES;
 
   function navigateToStock(ticker: string) {
-    requireAuth(() => router.push(`/analyse/${ticker}`));
+    if (!user) {
+      sessionStorage.setItem("authRedirectNext", `/analyse/${ticker}`);
+      setShowLoginModal(true);
+      return;
+    }
+    router.push(`/analyse/${ticker}`);
   }
 
   return (
