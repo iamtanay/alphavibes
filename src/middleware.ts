@@ -1,4 +1,4 @@
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const PROTECTED_ROUTES = ["/analyse", "/watchlist"];
@@ -6,7 +6,6 @@ const PROTECTED_ROUTES = ["/analyse", "/watchlist"];
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Start with a mutable response so refreshed cookies can be forwarded
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -17,9 +16,7 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
-          // Must write to both request (so subsequent server code sees it)
-          // and response (so the browser receives updated cookies).
+        setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
@@ -32,8 +29,6 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // getUser() validates the JWT with Supabase's server — never trust getSession()
-  // alone in middleware as it only reads from the cookie without verification.
   const {
     data: { user },
   } = await supabase.auth.getUser();
