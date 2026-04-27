@@ -2,7 +2,7 @@
 
 import {
   LayoutDashboard, BarChart2, TrendingUp, FileText,
-  Users, PieChart, Newspaper, MoreHorizontal,
+  Users, PieChart, Newspaper,
 } from "lucide-react";
 import type { TabId } from "@/types";
 
@@ -25,7 +25,17 @@ export default function AnalysisSidebar({ activeTab, onTabChange }: SidebarProps
   return (
     <aside
       className="hidden md:flex flex-col w-[200px] shrink-0 py-4 gap-1"
-      style={{ backgroundColor: "var(--surface-1)", borderRight: "1px solid var(--border)", minHeight: "calc(100vh - 56px)" }}
+      style={{
+        position: "fixed",
+        top: "56px",
+        left: 0,
+        bottom: 0,
+        width: "200px",
+        backgroundColor: "var(--surface-1)",
+        borderRight: "1px solid var(--border)",
+        overflowY: "auto",
+        zIndex: 30,
+      }}
     >
       {items.map((item) => {
         const Icon = item.icon;
@@ -41,11 +51,6 @@ export default function AnalysisSidebar({ activeTab, onTabChange }: SidebarProps
           </button>
         );
       })}
-
-      <button className="sidebar-item w-full text-left mt-auto">
-        <MoreHorizontal size={16} />
-        <span>More</span>
-      </button>
     </aside>
   );
 }

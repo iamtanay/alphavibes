@@ -194,10 +194,132 @@ export default function HomePage() {
           })}
         </section>
 
-        <footer className="text-center mt-12 pb-4">
+        {/* ── Problems We Solve ───────────────────────────────────────── */}
+        <section className="px-6 mt-14 max-w-3xl mx-auto">
+          <div className="text-center mb-8">
+            <span
+              className="inline-block text-xs font-semibold uppercase tracking-widest px-3 py-1 rounded-full mb-3"
+              style={{ backgroundColor: "rgba(124,92,255,0.12)", color: "var(--violet)" }}
+            >
+              Why AlphaVibes?
+            </span>
+            <h2 className="text-2xl md:text-3xl font-bold" style={{ color: "var(--text-primary)" }}>
+              Built for investors who are{" "}
+              <span className="gradient-text">tired of complexity</span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              {
+                emoji: "📰",
+                problem: "Too much noise, too little signal",
+                solution: "AlphaVibes cuts through the clutter and surfaces what actually matters — valuation, momentum, and risk — in one clean view.",
+              },
+              {
+                emoji: "🧮",
+                problem: "Financial statements are intimidating",
+                solution: "We translate balance sheets, P&L, and cash flows into plain English so any investor can understand what the numbers mean.",
+              },
+              {
+                emoji: "🔍",
+                problem: "Hard to compare stocks quickly",
+                solution: "Our Peers tab lets you benchmark any stock against its sector rivals on key metrics, side by side, in seconds.",
+              },
+              {
+                emoji: "🤔",
+                problem: "Not sure if a stock suits your style",
+                solution: "Investor Personas show how legends like Buffett or Lynch would view the stock, so you can align picks with your philosophy.",
+              },
+            ].map((item) => (
+              <div
+                key={item.problem}
+                className="card flex gap-4 items-start"
+              >
+                <span className="text-2xl shrink-0">{item.emoji}</span>
+                <div>
+                  <p className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
+                    {item.problem}
+                  </p>
+                  <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                    {item.solution}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── How to Use ──────────────────────────────────────────────── */}
+        <section className="px-6 mt-14 max-w-3xl mx-auto">
+          <div className="text-center mb-8">
+            <span
+              className="inline-block text-xs font-semibold uppercase tracking-widest px-3 py-1 rounded-full mb-3"
+              style={{ backgroundColor: "rgba(34,211,168,0.10)", color: "var(--teal-accent)" }}
+            >
+              Get Started
+            </span>
+            <h2 className="text-2xl md:text-3xl font-bold" style={{ color: "var(--text-primary)" }}>
+              Analyse any stock in{" "}
+              <span className="gradient-text">3 simple steps</span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                step: "01",
+                title: "Search any stock",
+                desc: "Type a company name or NSE/BSE ticker in the search bar. We cover 5,000+ listed Indian stocks.",
+                color: "var(--violet)",
+              },
+              {
+                step: "02",
+                title: "Explore the analysis",
+                desc: "Dive into Overview, Fundamentals, Technicals, Financials, Peers, and Shareholding — all in one place.",
+                color: "var(--teal-accent)",
+              },
+              {
+                step: "03",
+                title: "Save to watchlist",
+                desc: "Bookmark stocks you're tracking. Come back anytime to monitor price changes and updated insights.",
+                color: "var(--blue-accent)",
+              },
+            ].map((s) => (
+              <div key={s.step} className="card flex flex-col items-center text-center gap-3">
+                <div
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-black font-mono-num shrink-0"
+                  style={{
+                    background: `linear-gradient(135deg, ${s.color}22, ${s.color}44)`,
+                    border: `1.5px solid ${s.color}55`,
+                    color: s.color,
+                  }}
+                >
+                  {s.step}
+                </div>
+                <h3 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                  {s.title}
+                </h3>
+                <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                  {s.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Footer ──────────────────────────────────────────────────── */}
+        <footer className="mt-16 pb-6 text-center border-t pt-8 mx-6" style={{ borderColor: "var(--border)" }}>
+          <div className="mb-3">
+            <span className="logo-gradient text-xl">AlphaVibes</span>
+          </div>
+          <p className="text-xs mb-1" style={{ color: "var(--text-secondary)" }}>
+            Insider-level stock intelligence. Simplified for everyone.
+          </p>
           <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
             Built with ❤️ by{" "}
-            <span className="text-violet font-medium">Accrion</span>
+            <span className="font-medium" style={{ color: "var(--violet)" }}>Accrion</span>
+            {" "}· Data is delayed. Not investment advice.
           </p>
         </footer>
       </main>

@@ -150,11 +150,11 @@ export default function AnalysePage() {
       <Header />
 
       <div className="flex" style={{ minHeight: "calc(100vh - 56px)" }}>
-        {/* Desktop Sidebar */}
+        {/* Desktop Sidebar (fixed) */}
         <AnalysisSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {/* Main Content */}
-        <main className="flex-1 min-w-0 pb-20 md:pb-8">
+        {/* Main Content — offset by sidebar width on desktop */}
+        <main className="flex-1 min-w-0 pb-20 md:pb-8 md:ml-[200px]">
 
           {/* ── Stock Header ─────────────────────────────────────────── */}
           <div
